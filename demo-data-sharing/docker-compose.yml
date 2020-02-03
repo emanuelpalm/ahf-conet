@@ -6,8 +6,28 @@ services:
   ###         DATA CONSUMER CLOUD          ###
   ############################################
 
-  consumer_mysql:
-    container_name: consumer_mysql
+#  consumer-mgmt-tool:
+#    container_name: consumer-mgmt-tool
+#    image: portus.arrowhead-ci.tmit.bme.hu/tools/management-tool:local
+#    environment:
+#      - REACT_APP_ARROWHEAD_SR_URL=https://consumer-serviceregistry:8448
+#      - REACT_APP_ARROWHEAD_AUTH_URL=https://consumer-authorization:8441
+#      - REACT_APP_ARROWHEAD_ORCH_URL=https://consumer-orchestrator:8447
+#      - REACT_APP_ARROWHEAD_GK_URL=https://consumer-gatekeeper:8445
+#      - REACT_APP_ARROWHEAD_GW_URL=https://consumer-gateway:8446
+#      - REACT_APP_ARROWHEAD_EH_URL=https://consumer-eventhandler:8444
+#    depends_on:
+#      - consumer-serviceregistry
+#      - consumer-authorization
+#      - consumer-orchestrator
+#      - consumer-gatekeeper
+#      - consumer-gateway
+#      - consumer-eventhandler
+#    ports:
+#      - 5000:8440
+
+  consumer-mysql:
+    container_name: consumer-mysql
     image: mysql:5.7
     environment:
       - MYSQL_ROOT_PASSWORD=123456
@@ -17,93 +37,109 @@ services:
     ports:
       - 3306:3306
 
-  consumer_authorization:
-    container_name: consumer_authorization
+  consumer-authorization:
+    container_name: consumer-authorization
     image: portus.arrowhead-ci.tmit.bme.hu/arrowhead/authorization:latest
     depends_on:
-      - consumer_mysql
-      - consumer_serviceregistry
+      - consumer-mysql
+      - consumer-serviceregistry
     volumes:
+      - ./cloud-data-consumer/authorization.p12:/authorization/certificates/authorization.p12
+      - ./cloud-data-consumer/truststore.p12:/authorization/certificates/truststore.p12
       - ./cloud-data-consumer/authorization.properties:/authorization/application.properties
     ports:
       - 8441:8441
 
-#  consumer_contract_system:
-#    container_name: consumer_contract_system
+#  consumer-contractsystem:
+#    container_name: consumer-contractsystem
 #    image: TODO
 #    depends_on:
-#      - consumer_mysql
-#      - consumer_orchestrator
-#      - consumer_serviceregistry
+#      - consumer-mysql
+#      - consumer-orchestrator
+#      - consumer-serviceregistry
 #    volumes:
+#      - ./cloud-data-consumer/contractsystem.p12:/contractsystem/certificates/contractsystem.p12
+#      - ./cloud-data-consumer/truststore.p12:/contractsystem/certificates/truststore.p12
 #      - ./cloud-data-consumer/contractsystem.properties:/contractsystem/application.properties
 #    ports:
 #      - 8442:8442
 
-  #  consumer_data_producer:
-  #    container_name: consumer_data_producer
-  #    image: TODO
-  #    depends_on:
-  #      - consumer_mysql
-  #      - consumer_orchestrator
-  #      - consumer_serviceregistry
-  #      - consumer_contract_system
-  #    volumes:
-  #      - ./cloud-data-consumer/dataproducer.properties:/dataproducer/application.properties
-  #    ports:
-  #      - 8443:8443
+#  consumer-dataproducer:
+#    container_name: consumer-dataproducer
+#    image: TODO
+#    depends_on:
+#      - consumer-mysql
+#      - consumer-orchestrator
+#      - consumer-serviceregistry
+#      - consumer-contract_system
+#    volumes:
+#      - ./cloud-data-consumer/dataproducer.p12:/dataproducer/certificates/dataproducer.p12
+#      - ./cloud-data-consumer/truststore.p12:/dataproducer/certificates/truststore.p12
+#      - ./cloud-data-consumer/dataproducer.properties:/dataproducer/application.properties
+#    ports:
+#      - 8443:8443
 
-  consumer_eventhandler:
-    container_name: consumer_eventhandler
-    image: portus.arrowhead-ci.tmit.bme.hu/arrowhead/eventhandler:latest
-    depends_on:
-      - consumer_mysql
-      - consumer_serviceregistry
-    volumes:
-      - ./cloud-data-consumer/eventhandler.properties:/eventhandler/application.properties
-    ports:
-      - 8444:8444
+#  consumer-eventhandler:
+#    container_name: consumer-eventhandler
+#    image: portus.arrowhead-ci.tmit.bme.hu/arrowhead/eventhandler:latest
+#    depends_on:
+#      - consumer-mysql
+#      - consumer-serviceregistry
+#    volumes:
+#      - ./cloud-data-consumer/eventhandler.p12:/eventhandler/certificates/eventhandler.p12
+#      - ./cloud-data-consumer/truststore.p12:/eventhandler/certificates/truststore.p12
+#      - ./cloud-data-consumer/eventhandler.properties:/eventhandler/application.properties
+#    ports:
+#      - 8444:8444
+#
+#  consumer-gatekeeper:
+#    container_name: consumer-gatekeeper
+#    image: portus.arrowhead-ci.tmit.bme.hu/arrowhead/gatekeeper:latest
+#    depends_on:
+#      - consumer-mysql
+#      - consumer-serviceregistry
+#    volumes:
+#      - ./cloud-data-consumer/gatekeeper.p12:/gatekeeper/certificates/gatekeeper.p12
+#      - ./cloud-data-consumer/truststore.p12:/gatekeeper/certificates/truststore.p12
+#      - ./cloud-data-consumer/gatekeeper.properties:/gatekeeper/application.properties
+#    ports:
+#      - 8445:8445
+#
+#  consumer-gateway:
+#    container_name: consumer-gateway
+#    image: portus.arrowhead-ci.tmit.bme.hu/arrowhead/gateway:latest
+#    depends_on:
+#      - consumer-mysql
+#      - consumer-serviceregistry
+#    volumes:
+#      - ./cloud-data-consumer/gateway.p12:/gateway/certificates/gateway.p12
+#      - ./cloud-data-consumer/truststore.p12:/gateway/certificates/truststore.p12
+#      - ./cloud-data-consumer/gateway.properties:/gateway/application.properties
+#    ports:
+#      - 8446:8446
 
-  consumer_gatekeeper:
-    container_name: consumer_gatekeeper
-    image: portus.arrowhead-ci.tmit.bme.hu/arrowhead/gatekeeper:latest
-    depends_on:
-      - consumer_mysql
-      - consumer_serviceregistry
-    volumes:
-      - ./cloud-data-consumer/gatekeeper.properties:/gatekeeper/application.properties
-    ports:
-      - 8445:8445
-
-  consumer_gateway:
-    container_name: consumer_gateway
-    image: portus.arrowhead-ci.tmit.bme.hu/arrowhead/gateway:latest
-    depends_on:
-      - consumer_mysql
-      - consumer_serviceregistry
-    volumes:
-      - ./cloud-data-consumer/gateway.properties:/gateway/application.properties
-    ports:
-      - 8446:8446
-
-  consumer_orchestrator:
-    container_name: consumer_orchestrator
+  consumer-orchestrator:
+    container_name: consumer-orchestrator
     image: portus.arrowhead-ci.tmit.bme.hu/arrowhead/orchestrator:latest
     depends_on:
-      - consumer_mysql
-      - consumer_serviceregistry
-      - consumer_gatekeeper
+      - consumer-mysql
+      - consumer-serviceregistry
+      #- consumer-gatekeeper
     volumes:
+      - ./cloud-data-consumer/orchestrator.p12:/orchestrator/certificates/orchestrator.p12
+      - ./cloud-data-consumer/truststore.p12:/orchestrator/certificates/truststore.p12
       - ./cloud-data-consumer/orchestrator.properties:/orchestrator/application.properties
     ports:
       - 8447:8447
 
-  consumer_serviceregistry:
-    container_name: consumer_serviceregistry
+  consumer-serviceregistry:
+    container_name: consumer-serviceregistry
     image: portus.arrowhead-ci.tmit.bme.hu/arrowhead/serviceregistry:latest
     depends_on:
-      - consumer_mysql
+      - consumer-mysql
     volumes:
+      - ./cloud-data-consumer/serviceregistry.p12:/serviceregistry/certificates/serviceregistry.p12
+      - ./cloud-data-consumer/truststore.p12:/serviceregistry/certificates/truststore.p12
       - ./cloud-data-consumer/serviceregistry.properties:/serviceregistry/application.properties
     ports:
       - 8448:8448
@@ -112,110 +148,146 @@ services:
   ###         DATA PRODUCER CLOUD          ###
   ############################################
 
-  producer_mysql:
-    container_name: producer_mysql
-    image: mysql:5.7
-    environment:
-      - MYSQL_ROOT_PASSWORD=123456
-    volumes:
-      - producer_mysql_vol:/var/lib/mysql
-      - ./create_empty_arrowhead_db.sql:/docker-entrypoint-initdb.d/init.sql
-    ports:
-      - 3307:3307
+#  producer-mgmt-tool:
+#    container_name: producer-mgmt-tool
+#    image: portus.arrowhead-ci.tmit.bme.hu/tools/management-tool:latest
+#    environment:
+#      - REACT_APP_ARROWHEAD_SR_URL=https://producer-serviceregistry:8548
+#      - REACT_APP_ARROWHEAD_AUTH_URL=https://producer-authorization:8541
+#      - REACT_APP_ARROWHEAD_ORCH_URL=https:/producer-orchestrator:8547
+#      - REACT_APP_ARROWHEAD_GK_URL=https://producer-gatekeeper:8545
+#      - REACT_APP_ARROWHEAD_GW_URL=https://producer-gateway:8546
+#      - REACT_APP_ARROWHEAD_EH_URL=https://producer-eventhandler:8544
+#    depends_on:
+#      - producer-serviceregistry
+#      - producer-authorization
+#      - producer-orchestrator
+#      - producer-gatekeeper
+#      - producer-gateway
+#      - producer-eventhandler
+#    ports:
+#      - 5000:8540
 
-  producer_authorization:
-    container_name: producer_authorization
-    image: portus.arrowhead-ci.tmit.bme.hu/arrowhead/authorization:latest
-    depends_on:
-      - producer_mysql
-      - producer_serviceregistry
-    volumes:
-      - ./cloud-data-producer/authorization.properties:/authorization/application.properties
-    ports:
-      - 8541:8541
+#  producer-mysql:
+#    container_name: producer-mysql
+#    image: mysql:5.7
+#    environment:
+#      - MYSQL_ROOT_PASSWORD=123456
+#    volumes:
+#      - producer_mysql_vol:/var/lib/mysql
+#      - ./create_empty_arrowhead_db.sql:/docker-entrypoint-initdb.d/init.sql
+#    ports:
+#      - 3307:3307
+#
+#  producer-authorization:
+#    container_name: producer-authorization
+#    image: portus.arrowhead-ci.tmit.bme.hu/arrowhead/authorization:latest
+#    depends_on:
+#      - producer-mysql
+#      - producer-serviceregistry
+#    volumes:
+#      - ./cloud-data-producer/authorization.p12:/authorization/certificates/authorization.p12
+#      - ./cloud-data-producer/truststore.p12:/authorization/certificates/truststore.p12
+#      - ./cloud-data-producer/authorization.properties:/authorization/application.properties
+#    ports:
+#      - 8541:8541
 
-  #  producer_contract_system:
-  #    container_name: producer_contract_system
-  #    image: TODO
-  #    depends_on:
-  #      - producer_mysql
-  #      - producer_orchestrator
-  #      - producer_serviceregistry
-  #    volumes:
-  #      - ./cloud-data-producer/contractsystem.properties:/contractsystem/application.properties
-  #    ports:
-  #      - 8542:8542
+#  producer-contractsystem:
+#    container_name: producer-contractsystem
+#    image: TODO
+#    depends_on:
+#      - producer-mysql
+#      - producer-orchestrator
+#      - producer-serviceregistry
+#    volumes:
+#      - ./cloud-data-producer/contractsystem.p12:/contractsystem/certificates/contractsystem.p12
+#      - ./cloud-data-producer/truststore.p12:/contractsystem/certificates/truststore.p12
+#      - ./cloud-data-producer/contractsystem.properties:/contractsystem/application.properties
+#    ports:
+#      - 8542:8542
 
-  #  producer_data_producer:
-  #    container_name: producer_data_producer
-  #    image: TODO
-  #    depends_on:
-  #      - producer_mysql
-  #      - producer_orchestrator
-  #      - producer_serviceregistry
-  #      - producer_contract_system
-  #    volumes:
-  #      - ./cloud-data-producer/dataproducer.properties:/dataproducer/application.properties
-  #    ports:
-  #      - 8543:8543
+#  producer-dataproducer:
+#    container_name: producer-dataproducer
+#    image: TODO
+#    depends_on:
+#      - producer-mysql
+#      - producer-orchestrator
+#      - producer-serviceregistry
+#      - producer-contract_system
+#    volumes:
+#      - ./cloud-data-producer/dataproducer.p12:/dataproducer/certificates/dataproducer.p12
+#      - ./cloud-data-producer/truststore.p12:/dataproducer/certificates/truststore.p12
+#      - ./cloud-data-producer/dataproducer.properties:/dataproducer/application.properties
+#    ports:
+#      - 8543:8543
 
-  producer_eventhandler:
-    container_name: producer_eventhandler
-    image: portus.arrowhead-ci.tmit.bme.hu/arrowhead/eventhandler:latest
-    depends_on:
-      - producer_mysql
-      - producer_serviceregistry
-    volumes:
-      - ./cloud-data-producer/eventhandler.properties:/eventhandler/application.properties
-    ports:
-      - 8544:8544
-
-  producer_gatekeeper:
-    container_name: producer_gatekeeper
-    image: portus.arrowhead-ci.tmit.bme.hu/arrowhead/gatekeeper:latest
-    depends_on:
-      - producer_mysql
-      - producer_serviceregistry
-    volumes:
-      - ./cloud-data-producer/gatekeeper.properties:/gatekeeper/application.properties
-    ports:
-      - 8545:8545
-
-  producer_gateway:
-    container_name: producer_gateway
-    image: portus.arrowhead-ci.tmit.bme.hu/arrowhead/gateway:latest
-    depends_on:
-      - producer_mysql
-      - producer_serviceregistry
-    volumes:
-      - ./cloud-data-producer/gateway.properties:/gateway/application.properties
-    ports:
-      - 8546:8546
-
-  producer_orchestrator:
-    container_name: producer_orchestrator
-    image: portus.arrowhead-ci.tmit.bme.hu/arrowhead/orchestrator:latest
-    depends_on:
-      - producer_mysql
-      - producer_serviceregistry
-      - producer_gatekeeper
-    volumes:
-      - ./cloud-data-producer/orchestrator.properties:/orchestrator/application.properties
-    ports:
-      - 8547:8547
-
-  producer_serviceregistry:
-    container_name: producer_serviceregistry
-    image: portus.arrowhead-ci.tmit.bme.hu/arrowhead/serviceregistry:latest
-    depends_on:
-      - producer_mysql
-    volumes:
-      - ./cloud-data-producer/serviceregistry.properties:/serviceregistry/application.properties
-    ports:
-      - 8548:8548
+#  producer-eventhandler:
+#    container_name: producer-eventhandler
+#    image: portus.arrowhead-ci.tmit.bme.hu/arrowhead/eventhandler:latest
+#    depends_on:
+#      - producer-mysql
+#      - producer-serviceregistry
+#    volumes:
+#      - ./cloud-data-producer/eventhandler.p12:/eventhandler/certificates/eventhandler.p12
+#      - ./cloud-data-producer/truststore.p12:/eventhandler/certificates/truststore.p12
+#      - ./cloud-data-producer/eventhandler.properties:/eventhandler/application.properties
+#    ports:
+#      - 8544:8544
+#
+#  producer-gatekeeper:
+#    container_name: producer-gatekeeper
+#    image: portus.arrowhead-ci.tmit.bme.hu/arrowhead/gatekeeper:latest
+#    depends_on:
+#      - producer-mysql
+#      - producer-serviceregistry
+#    volumes:
+#      - ./cloud-data-producer/gatekeeper.p12:/gatekeeper/certificates/gatekeeper.p12
+#      - ./cloud-data-producer/truststore.p12:/gatekeeper/certificates/truststore.p12
+#      - ./cloud-data-producer/gatekeeper.properties:/gatekeeper/application.properties
+#    ports:
+#      - 8545:8545
+#
+#  producer-gateway:
+#    container_name: producer-gateway
+#    image: portus.arrowhead-ci.tmit.bme.hu/arrowhead/gateway:latest
+#    depends_on:
+#      - producer-mysql
+#      - producer-serviceregistry
+#    volumes:
+#      - ./cloud-data-producer/gateway.p12:/gateway/certificates/gateway.p12
+#      - ./cloud-data-producer/truststore.p12:/gateway/certificates/truststore.p12
+#      - ./cloud-data-producer/gateway.properties:/gateway/application.properties
+#    ports:
+#      - 8546:8546
+#
+#  producer-orchestrator:
+#    container_name: producer-orchestrator
+#    image: portus.arrowhead-ci.tmit.bme.hu/arrowhead/orchestrator:latest
+#    depends_on:
+#      - producer-mysql
+#      - producer-serviceregistry
+#      - producer-gatekeeper
+#    volumes:
+#      - ./cloud-data-producer/orchestrator.p12:/orchestrator/certificates/orchestrator.p12
+#      - ./cloud-data-producer/truststore.p12:/orchestrator/certificates/truststore.p12
+#      - ./cloud-data-producer/orchestrator.properties:/orchestrator/application.properties
+#    ports:
+#      - 8547:8547
+#
+#  producer-serviceregistry:
+#    container_name: producer-serviceregistry
+#    image: portus.arrowhead-ci.tmit.bme.hu/arrowhead/serviceregistry:latest
+#    depends_on:
+#      - producer-mysql
+#    volumes:
+#      - ./cloud-data-producer/serviceregistry.p12:/serviceregistry/certificates/serviceregistry.p12
+#      - ./cloud-data-producer/truststore.p12:/serviceregistry/certificates/truststore.p12
+#      - ./cloud-data-producer/serviceregistry.properties:/serviceregistry/application.properties
+#    ports:
+#      - 8548:8548
 
 volumes:
   consumer_mysql_vol:
     external: true
-  producer_mysql_vol:
-    external: true
+  #producer_mysql_vol:
+    #external: true
