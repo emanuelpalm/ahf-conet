@@ -37,7 +37,7 @@
                     <archive>
                         <index>true</index>
                         <manifest>
-                            <mainClass>eu.arrowhead.proto.cosys.datasharing.DataConsumerMain</mainClass>
+                            <mainClass>DataConsumerMain</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
