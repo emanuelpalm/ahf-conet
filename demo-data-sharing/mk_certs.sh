@@ -105,7 +105,7 @@ create_system_keystore() {
   local CLOUD_CERTIFICATE="${CLOUD_KEYSTORE%.*}.cer"
   local SYSTEM_KEYSTORE=$5
   local SYSTEM_KEY_ALIAS=$6
-  local SYSTEM_DOCKER_DNS_NAME=$7
+  local SAN=$7
 
   rm -f "${SYSTEM_KEYSTORE}"
   rm -f "${SYSTEM_CERTIFICATE}"
@@ -120,7 +120,7 @@ create_system_keystore() {
     -alias "${SYSTEM_KEY_ALIAS}" \
     -keypass:env "PASSWORD" \
     -dname "CN=${SYSTEM_KEY_ALIAS}" \
-    -ext "SubjectAlternativeName=dns:${SYSTEM_DOCKER_DNS_NAME},dns:localhost,ip:127.0.0.1"
+    -ext "SubjectAlternativeName=${SAN}"
 
   keytool -importcert -v \
     -keystore "${SYSTEM_KEYSTORE}" \
@@ -149,7 +149,7 @@ create_system_keystore() {
       -validity "3650" \
       -alias "${CLOUD_KEY_ALIAS}" \
       -keypass:env "PASSWORD" \
-      -ext "SubjectAlternativeName=dns:${SYSTEM_DOCKER_DNS_NAME},dns:localhost,ip:127.0.0.1" \
+      -ext "SubjectAlternativeName=${SAN}" \
       -rfc |
     keytool -importcert \
       -keystore "${SYSTEM_KEYSTORE}" \
@@ -176,6 +176,8 @@ create_truststore() {
   done
 }
 
+# ROOT
+
 create_root_keystore \
   "cloud-root/root.p12" "arrowhead.eu"
 
@@ -189,7 +191,7 @@ create_system_keystore \
   "cloud-root/root.p12" "arrowhead.eu" \
   "cloud-relay/conet-demo-relay.p12" "conet-demo-relay.ltu.arrowhead.eu" \
   "cloud-relay/alpha.p12" "alpha.conet-demo-relay.ltu.arrowhead.eu" \
-  "relay-alpha"
+  "dns:alpha.relay,ip:172.23.1.11,dns:localhost,ip:127.0.0.1"
 
 create_truststore \
   "cloud-relay/truststore.p12" \
@@ -201,17 +203,31 @@ create_cloud_keystore \
   "cloud-root/root.p12" "arrowhead.eu" \
   "cloud-data-consumer/conet-demo-consumer.p12" "conet-demo-consumer.ltu.arrowhead.eu"
 
-for FILE in cloud-data-consumer/*.properties; do
-  SYSTEM_KEYSTORE="${FILE%.*}.p12"
-  SYSTEM_KEYSTORE_NAME="${SYSTEM_KEYSTORE##*/}"
-  SYSTEM_NAME="${SYSTEM_KEYSTORE_NAME%.*}"
+create_consumer_system_keystore () {
+  SYSTEM_NAME=$1
+  SYSTEM_IP=$2
 
   create_system_keystore \
     "cloud-root/root.p12" "arrowhead.eu" \
     "cloud-data-consumer/conet-demo-consumer.p12" "conet-demo-consumer.ltu.arrowhead.eu" \
-    "${SYSTEM_KEYSTORE}" "${SYSTEM_NAME}.conet-demo-consumer.ltu.arrowhead.eu" \
-    "consumer-${SYSTEM_NAME}"
-done
+    "cloud-data-consumer/${SYSTEM_NAME}.p12" "${SYSTEM_NAME}.conet-demo-consumer.ltu.arrowhead.eu" \
+    "dns:${SYSTEM_NAME}.consumer,ip:${SYSTEM_IP},dns:localhost,ip:127.0.0.1"
+}
+
+create_consumer_system_keystore "authorization"   "172.23.2.13"
+create_consumer_system_keystore "contractproxy"   "172.23.2.14"
+create_consumer_system_keystore "dataconsumer"    "172.23.2.15"
+create_consumer_system_keystore "eventhandler"    "172.23.2.16"
+create_consumer_system_keystore "gatekeeper"      "172.23.2.17"
+create_consumer_system_keystore "gateway"         "172.23.2.18"
+create_consumer_system_keystore "orchestrator"    "172.23.2.19"
+create_consumer_system_keystore "serviceregistry" "172.23.2.20"
+
+create_system_keystore \
+  "cloud-root/root.p12" "arrowhead.eu" \
+  "cloud-data-consumer/conet-demo-consumer.p12" "conet-demo-consumer.ltu.arrowhead.eu" \
+  "cloud-data-consumer/sysop.p12" "sysop.conet-demo-consumer.ltu.arrowhead.eu" \
+  "dns:localhost,ip:127.0.0.1"
 
 create_truststore \
   "cloud-data-consumer/truststore.p12" \
@@ -224,17 +240,31 @@ create_cloud_keystore \
   "cloud-root/root.p12" "arrowhead.eu" \
   "cloud-data-producer/conet-demo-producer.p12" "conet-demo-producer.ltu.arrowhead.eu"
 
-for FILE in cloud-data-producer/*.properties; do
-  SYSTEM_KEYSTORE="${FILE%.*}.p12"
-  SYSTEM_KEYSTORE_NAME="${SYSTEM_KEYSTORE##*/}"
-  SYSTEM_NAME="${SYSTEM_KEYSTORE_NAME%.*}"
+create_producer_system_keystore () {
+  SYSTEM_NAME=$1
+  SYSTEM_IP=$2
 
   create_system_keystore \
     "cloud-root/root.p12" "arrowhead.eu" \
     "cloud-data-producer/conet-demo-producer.p12" "conet-demo-producer.ltu.arrowhead.eu" \
-    "${SYSTEM_KEYSTORE}" "${SYSTEM_NAME}.conet-demo-producer.ltu.arrowhead.eu" \
-    "producer-${SYSTEM_NAME}"
-done
+    "cloud-data-producer/${SYSTEM_NAME}.p12" "${SYSTEM_NAME}.conet-demo-producer.ltu.arrowhead.eu" \
+    "dns:${SYSTEM_NAME}.producer,ip:${SYSTEM_IP},dns:localhost,ip:127.0.0.1"
+}
+
+create_producer_system_keystore "authorization"   "172.23.3.13"
+create_producer_system_keystore "contractproxy"   "172.23.3.14"
+create_producer_system_keystore "dataconsumer"    "172.23.3.15"
+create_producer_system_keystore "eventhandler"    "172.23.3.16"
+create_producer_system_keystore "gatekeeper"      "172.23.3.17"
+create_producer_system_keystore "gateway"         "172.23.3.18"
+create_producer_system_keystore "orchestrator"    "172.23.3.19"
+create_producer_system_keystore "serviceregistry" "172.23.3.20"
+
+create_system_keystore \
+  "cloud-root/root.p12" "arrowhead.eu" \
+  "cloud-data-producer/conet-demo-producer.p12" "conet-demo-producer.ltu.arrowhead.eu" \
+  "cloud-data-producer/sysop.p12" "sysop.conet-demo-producer.ltu.arrowhead.eu" \
+  "dns:localhost,ip:127.0.0.1"
 
 create_truststore \
   "cloud-data-producer/truststore.p12" \

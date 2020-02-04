@@ -6,28 +6,31 @@ services:
   ###         DATA CONSUMER CLOUD          ###
   ############################################
 
-#  consumer-mgmt-tool:
-#    container_name: consumer-mgmt-tool
-#    image: portus.arrowhead-ci.tmit.bme.hu/tools/management-tool:local
-#    environment:
-#      - REACT_APP_ARROWHEAD_SR_URL=https://consumer-serviceregistry:8448
-#      - REACT_APP_ARROWHEAD_AUTH_URL=https://consumer-authorization:8441
-#      - REACT_APP_ARROWHEAD_ORCH_URL=https://consumer-orchestrator:8447
-#      - REACT_APP_ARROWHEAD_GK_URL=https://consumer-gatekeeper:8445
-#      - REACT_APP_ARROWHEAD_GW_URL=https://consumer-gateway:8446
-#      - REACT_APP_ARROWHEAD_EH_URL=https://consumer-eventhandler:8444
-#    depends_on:
-#      - consumer-serviceregistry
-#      - consumer-authorization
-#      - consumer-orchestrator
-#      - consumer-gatekeeper
-#      - consumer-gateway
-#      - consumer-eventhandler
-#    ports:
-#      - 5000:8440
+  consumer-mgmt-tool:
+    container_name: mgmt-tool.consumer
+    image: svetlint/management-tool
+    environment:
+      - REACT_APP_ARROWHEAD_AUTH_URL=https://172.23.2.13:8441
+      # - REACT_APP_ARROWHEAD_EH_URL=https://172.23.2.16:8444
+      # - REACT_APP_ARROWHEAD_GK_URL=https://172.23.2.17:8445
+      # - REACT_APP_ARROWHEAD_GW_URL=https://172.23.2.18:8446
+      - REACT_APP_ARROWHEAD_ORCH_URL=https://172.23.2.19:8447
+      - REACT_APP_ARROWHEAD_SR_URL=https://172.23.2.20:8448
+    depends_on:
+      - consumer-authorization
+      # - consumer-eventhandler
+      # - consumer-gatekeeper
+      # - consumer-gateway
+      - consumer-orchestrator
+      - consumer-serviceregistry
+    ports:
+      - 5000:5000
+    networks:
+      clouds:
+        ipv4_address: 172.23.2.11
 
   consumer-mysql:
-    container_name: consumer-mysql
+    container_name: mysql.consumer
     image: mysql:5.7
     environment:
       - MYSQL_ROOT_PASSWORD=123456
@@ -36,10 +39,13 @@ services:
       - ./create_empty_arrowhead_db.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - 3306:3306
+    networks:
+      clouds:
+        ipv4_address: 172.23.2.12
 
   consumer-authorization:
-    container_name: consumer-authorization
-    image: portus.arrowhead-ci.tmit.bme.hu/arrowhead/authorization:latest
+    container_name: authorization.consumer
+    image: svetlint/authorization:latest
     depends_on:
       - consumer-mysql
       - consumer-serviceregistry
@@ -49,9 +55,12 @@ services:
       - ./cloud-data-consumer/authorization.properties:/authorization/application.properties
     ports:
       - 8441:8441
+    networks:
+      clouds:
+        ipv4_address: 172.23.2.13
 
 #  consumer-contractproxy:
-#    container_name: consumer-contractproxy
+#    container_name: contractproxy.consumer
 #    image: TODO
 #    depends_on:
 #      - consumer-mysql
@@ -63,9 +72,12 @@ services:
 #      - ./cloud-data-consumer/contractproxy.properties:/contractproxy/application.properties
 #    ports:
 #      - 8442:8442
+#    networks:
+#      clouds:
+#        ipv4_address: 172.23.2.14
 
 #  consumer-dataproducer:
-#    container_name: consumer-dataproducer
+#    container_name: dataproducer.consumer
 #    image: TODO
 #    depends_on:
 #      - consumer-mysql
@@ -78,10 +90,13 @@ services:
 #      - ./cloud-data-consumer/dataproducer.properties:/dataproducer/application.properties
 #    ports:
 #      - 8443:8443
+#    networks:
+#      clouds:
+#        ipv4_address: 172.23.2.15
 
 #  consumer-eventhandler:
-#    container_name: consumer-eventhandler
-#    image: portus.arrowhead-ci.tmit.bme.hu/arrowhead/eventhandler:latest
+#    container_name: eventhandler.consumer
+#    image: svetlint/eventhandler:latest
 #    depends_on:
 #      - consumer-mysql
 #      - consumer-serviceregistry
@@ -91,10 +106,13 @@ services:
 #      - ./cloud-data-consumer/eventhandler.properties:/eventhandler/application.properties
 #    ports:
 #      - 8444:8444
+#    networks:
+#      clouds:
+#        ipv4_address: 172.23.2.16
 #
 #  consumer-gatekeeper:
-#    container_name: consumer-gatekeeper
-#    image: portus.arrowhead-ci.tmit.bme.hu/arrowhead/gatekeeper:latest
+#    container_name: gatekeeper.consumer
+#    image: svetlint/gatekeeper:latest
 #    depends_on:
 #      - consumer-mysql
 #      - consumer-serviceregistry
@@ -104,10 +122,13 @@ services:
 #      - ./cloud-data-consumer/gatekeeper.properties:/gatekeeper/application.properties
 #    ports:
 #      - 8445:8445
+#    networks:
+#      clouds:
+#        ipv4_address: 172.23.2.17
 #
 #  consumer-gateway:
-#    container_name: consumer-gateway
-#    image: portus.arrowhead-ci.tmit.bme.hu/arrowhead/gateway:latest
+#    container_name: gateway.consumer
+#    image: svetlint/gateway:latest
 #    depends_on:
 #      - consumer-mysql
 #      - consumer-serviceregistry
@@ -117,10 +138,13 @@ services:
 #      - ./cloud-data-consumer/gateway.properties:/gateway/application.properties
 #    ports:
 #      - 8446:8446
+#    networks:
+#      clouds:
+#        ipv4_address: 172.23.2.18
 
   consumer-orchestrator:
-    container_name: consumer-orchestrator
-    image: portus.arrowhead-ci.tmit.bme.hu/arrowhead/orchestrator:latest
+    container_name: orchestrator.consumer
+    image: svetlint/orchestrator:latest
     depends_on:
       - consumer-mysql
       - consumer-serviceregistry
@@ -131,10 +155,13 @@ services:
       - ./cloud-data-consumer/orchestrator.properties:/orchestrator/application.properties
     ports:
       - 8447:8447
+    networks:
+      clouds:
+        ipv4_address: 172.23.2.19
 
   consumer-serviceregistry:
-    container_name: consumer-serviceregistry
-    image: portus.arrowhead-ci.tmit.bme.hu/arrowhead/serviceregistry:latest
+    container_name: serviceregistry.consumer
+    image: svetlint/serviceregistry:latest
     depends_on:
       - consumer-mysql
     volumes:
@@ -143,21 +170,24 @@ services:
       - ./cloud-data-consumer/serviceregistry.properties:/serviceregistry/application.properties
     ports:
       - 8448:8448
+    networks:
+      clouds:
+        ipv4_address: 172.23.2.20
 
   ############################################
   ###         DATA PRODUCER CLOUD          ###
   ############################################
 
 #  producer-mgmt-tool:
-#    container_name: producer-mgmt-tool
+#    container_name: mgmt-tool.producer
 #    image: portus.arrowhead-ci.tmit.bme.hu/tools/management-tool:latest
 #    environment:
-#      - REACT_APP_ARROWHEAD_SR_URL=https://producer-serviceregistry:8548
-#      - REACT_APP_ARROWHEAD_AUTH_URL=https://producer-authorization:8541
-#      - REACT_APP_ARROWHEAD_ORCH_URL=https:/producer-orchestrator:8547
-#      - REACT_APP_ARROWHEAD_GK_URL=https://producer-gatekeeper:8545
-#      - REACT_APP_ARROWHEAD_GW_URL=https://producer-gateway:8546
-#      - REACT_APP_ARROWHEAD_EH_URL=https://producer-eventhandler:8544
+#      - REACT_APP_ARROWHEAD_SR_URL=https://serviceregistry.producer:8548
+#      - REACT_APP_ARROWHEAD_AUTH_URL=https://authorization.producer:8541
+#      - REACT_APP_ARROWHEAD_ORCH_URL=https:/orchestrator.producer:8547
+#      - REACT_APP_ARROWHEAD_GK_URL=https://gatekeeper.producer:8545
+#      - REACT_APP_ARROWHEAD_GW_URL=https://gateway.producer:8546
+#      - REACT_APP_ARROWHEAD_EH_URL=https://eventhandler.producer:8544
 #    depends_on:
 #      - producer-serviceregistry
 #      - producer-authorization
@@ -166,10 +196,13 @@ services:
 #      - producer-gateway
 #      - producer-eventhandler
 #    ports:
-#      - 5000:8540
+#      - 5000:5000
+#    networks:
+#      clouds:
+#        ipv4_address: 172.23.3.11
 
 #  producer-mysql:
-#    container_name: producer-mysql
+#    container_name: mysql.producer
 #    image: mysql:5.7
 #    environment:
 #      - MYSQL_ROOT_PASSWORD=123456
@@ -177,11 +210,14 @@ services:
 #      - producer_mysql_vol:/var/lib/mysql
 #      - ./create_empty_arrowhead_db.sql:/docker-entrypoint-initdb.d/init.sql
 #    ports:
-#      - 3307:3307
-#
+#      - 3306:3306
+#    networks:
+#      clouds:
+#        ipv4_address: 172.23.3.12
+
 #  producer-authorization:
-#    container_name: producer-authorization
-#    image: portus.arrowhead-ci.tmit.bme.hu/arrowhead/authorization:latest
+#    container_name: authorization.producer
+#    image: svetlint/authorization:latest
 #    depends_on:
 #      - producer-mysql
 #      - producer-serviceregistry
@@ -191,9 +227,12 @@ services:
 #      - ./cloud-data-producer/authorization.properties:/authorization/application.properties
 #    ports:
 #      - 8541:8541
+#    networks:
+#      clouds:
+#        ipv4_address: 172.23.3.13
 
 #  producer-contractproxy:
-#    container_name: producer-contractproxy
+#    container_name: contractproxy.producer
 #    image: TODO
 #    depends_on:
 #      - producer-mysql
@@ -205,9 +244,12 @@ services:
 #      - ./cloud-data-producer/contractproxy.properties:/contractproxy/application.properties
 #    ports:
 #      - 8542:8542
+#    networks:
+#      clouds:
+#        ipv4_address: 172.23.3.14
 
 #  producer-dataproducer:
-#    container_name: producer-dataproducer
+#    container_name: dataproducer.producer
 #    image: TODO
 #    depends_on:
 #      - producer-mysql
@@ -220,10 +262,13 @@ services:
 #      - ./cloud-data-producer/dataproducer.properties:/dataproducer/application.properties
 #    ports:
 #      - 8543:8543
+#    networks:
+#      clouds:
+#        ipv4_address: 172.23.3.15
 
 #  producer-eventhandler:
-#    container_name: producer-eventhandler
-#    image: portus.arrowhead-ci.tmit.bme.hu/arrowhead/eventhandler:latest
+#    container_name: eventhandler.producer
+#    image: svetlint/eventhandler:latest
 #    depends_on:
 #      - producer-mysql
 #      - producer-serviceregistry
@@ -233,10 +278,13 @@ services:
 #      - ./cloud-data-producer/eventhandler.properties:/eventhandler/application.properties
 #    ports:
 #      - 8544:8544
-#
+#    networks:
+#      clouds:
+#        ipv4_address: 172.23.3.16
+
 #  producer-gatekeeper:
-#    container_name: producer-gatekeeper
-#    image: portus.arrowhead-ci.tmit.bme.hu/arrowhead/gatekeeper:latest
+#    container_name: gatekeeper.producer
+#    image: svetlint/gatekeeper:latest
 #    depends_on:
 #      - producer-mysql
 #      - producer-serviceregistry
@@ -246,10 +294,13 @@ services:
 #      - ./cloud-data-producer/gatekeeper.properties:/gatekeeper/application.properties
 #    ports:
 #      - 8545:8545
-#
+#    networks:
+#      clouds:
+#        ipv4_address: 172.23.3.17
+
 #  producer-gateway:
-#    container_name: producer-gateway
-#    image: portus.arrowhead-ci.tmit.bme.hu/arrowhead/gateway:latest
+#    container_name: gateway.producer
+#    image: svetlint/gateway:latest
 #    depends_on:
 #      - producer-mysql
 #      - producer-serviceregistry
@@ -259,10 +310,13 @@ services:
 #      - ./cloud-data-producer/gateway.properties:/gateway/application.properties
 #    ports:
 #      - 8546:8546
-#
+#    networks:
+#      clouds:
+#        ipv4_address: 172.23.3.18
+
 #  producer-orchestrator:
-#    container_name: producer-orchestrator
-#    image: portus.arrowhead-ci.tmit.bme.hu/arrowhead/orchestrator:latest
+#    container_name: orchestrator.producer
+#    image: svetlint/orchestrator:latest
 #    depends_on:
 #      - producer-mysql
 #      - producer-serviceregistry
@@ -273,10 +327,13 @@ services:
 #      - ./cloud-data-producer/orchestrator.properties:/orchestrator/application.properties
 #    ports:
 #      - 8547:8547
-#
+#    networks:
+#      clouds:
+#        ipv4_address: 172.23.3.19
+
 #  producer-serviceregistry:
-#    container_name: producer-serviceregistry
-#    image: portus.arrowhead-ci.tmit.bme.hu/arrowhead/serviceregistry:latest
+#    container_name: serviceregistry.producer
+#    image: svetlint/serviceregistry:latest
 #    depends_on:
 #      - producer-mysql
 #    volumes:
@@ -285,9 +342,18 @@ services:
 #      - ./cloud-data-producer/serviceregistry.properties:/serviceregistry/application.properties
 #    ports:
 #      - 8548:8548
+#    networks:
+#      clouds:
+#        ipv4_address: 172.23.3.20
 
 volumes:
   consumer_mysql_vol:
     external: true
-  #producer_mysql_vol:
-    #external: true
+#  producer_mysql_vol:
+#    external: true
+
+networks:
+  clouds:
+    ipam:
+      config:
+        - subnet: 172.23.0.0/16
