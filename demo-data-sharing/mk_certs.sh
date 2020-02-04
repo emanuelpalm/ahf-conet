@@ -1,0 +1,242 @@
+#!/bin/bash
+
+# Uses `keytool` to generate and sign all keystores, certificates and truststores
+# required to run the data sharing demo.
+
+# This password is used for everything.
+export PASSWORD="123456"
+
+create_root_keystore() {
+  local MASTER_KEYSTORE=$1
+  local MASTER_KEY_ALIAS=$2
+  local MASTER_CERTIFICATE="${MASTER_KEYSTORE%.*}.cer"
+
+  rm -f "${MASTER_KEYSTORE}"
+  rm -f "${MASTER_CERTIFICATE}"
+  mkdir -p "$(dirname "${MASTER_CERTIFICATE}")"
+
+  keytool -genkeypair -v \
+    -keystore "${MASTER_KEYSTORE}" \
+    -storepass:env "PASSWORD" \
+    -keyalg "RSA" \
+    -keysize "2048" \
+    -validity "3650" \
+    -alias "${MASTER_KEY_ALIAS}" \
+    -keypass:env "PASSWORD" \
+    -dname "CN=${MASTER_KEY_ALIAS}" \
+    -ext "BasicConstraints=ca:true,pathlen:3"
+
+  keytool -exportcert -v \
+    -keystore "${MASTER_KEYSTORE}" \
+    -storepass:env "PASSWORD" \
+    -alias "${MASTER_KEY_ALIAS}" \
+    -keypass:env "PASSWORD" \
+    -file "${MASTER_CERTIFICATE}" \
+    -rfc
+}
+
+create_cloud_keystore() {
+  local MASTER_KEYSTORE=$1
+  local MASTER_KEY_ALIAS=$2
+  local MASTER_CERTIFICATE="${MASTER_KEYSTORE%.*}.cer"
+  local CLOUD_KEYSTORE=$3
+  local CLOUD_KEY_ALIAS=$4
+  local CLOUD_CERTIFICATE="${CLOUD_KEYSTORE%.*}.cer"
+
+  rm -f "${CLOUD_KEYSTORE}"
+  rm -f "${CLOUD_CERTIFICATE}"
+  mkdir -p "$(dirname "${CLOUD_KEYSTORE}")"
+
+  keytool -genkeypair -v \
+    -keystore "${CLOUD_KEYSTORE}" \
+    -storepass:env "PASSWORD" \
+    -keyalg "RSA" \
+    -keysize "2048" \
+    -validity "3650" \
+    -alias "${CLOUD_KEY_ALIAS}" \
+    -keypass:env "PASSWORD" \
+    -dname "CN=${CLOUD_KEY_ALIAS}" \
+    -ext "BasicConstraints=ca:true,pathlen:2"
+
+  keytool -importcert -v \
+    -keystore "${CLOUD_KEYSTORE}" \
+    -storepass:env "PASSWORD" \
+    -alias "${MASTER_KEY_ALIAS}" \
+    -file "${MASTER_CERTIFICATE}" \
+    -trustcacerts \
+    -noprompt
+
+  keytool -certreq -v \
+    -keystore "${CLOUD_KEYSTORE}" \
+    -storepass:env "PASSWORD" \
+    -alias "${CLOUD_KEY_ALIAS}" \
+    -keypass:env "PASSWORD" |
+    keytool -gencert -v \
+      -keystore "${MASTER_KEYSTORE}" \
+      -storepass:env "PASSWORD" \
+      -validity "3650" \
+      -alias "${MASTER_KEY_ALIAS}" \
+      -keypass:env "PASSWORD" \
+      -ext "BasicConstraints=ca:true,pathlen:2" \
+      -rfc |
+    keytool -importcert \
+      -keystore "${CLOUD_KEYSTORE}" \
+      -storepass:env "PASSWORD" \
+      -alias "${CLOUD_KEY_ALIAS}" \
+      -keypass:env "PASSWORD" \
+      -trustcacerts \
+      -noprompt
+
+  keytool -exportcert -v \
+    -keystore "${CLOUD_KEYSTORE}" \
+    -storepass:env "PASSWORD" \
+    -alias "${CLOUD_KEY_ALIAS}" \
+    -keypass:env "PASSWORD" \
+    -file "${CLOUD_CERTIFICATE}" \
+    -rfc
+}
+
+create_system_keystore() {
+  local MASTER_KEYSTORE=$1
+  local MASTER_KEY_ALIAS=$2
+  local MASTER_CERTIFICATE="${MASTER_KEYSTORE%.*}.cer"
+  local CLOUD_KEYSTORE=$3
+  local CLOUD_KEY_ALIAS=$4
+  local CLOUD_CERTIFICATE="${CLOUD_KEYSTORE%.*}.cer"
+  local SYSTEM_KEYSTORE=$5
+  local SYSTEM_KEY_ALIAS=$6
+  local SYSTEM_DOCKER_DNS_NAME=$7
+
+  rm -f "${SYSTEM_KEYSTORE}"
+  rm -f "${SYSTEM_CERTIFICATE}"
+  mkdir -p "$(dirname "${SYSTEM_KEYSTORE}")"
+
+  keytool -genkeypair -v \
+    -keystore "${SYSTEM_KEYSTORE}" \
+    -storepass:env "PASSWORD" \
+    -keyalg "RSA" \
+    -keysize "2048" \
+    -validity "3650" \
+    -alias "${SYSTEM_KEY_ALIAS}" \
+    -keypass:env "PASSWORD" \
+    -dname "CN=${SYSTEM_KEY_ALIAS}" \
+    -ext "SubjectAlternativeName=dns:${SYSTEM_DOCKER_DNS_NAME},dns:localhost,ip:127.0.0.1"
+
+  keytool -importcert -v \
+    -keystore "${SYSTEM_KEYSTORE}" \
+    -storepass:env "PASSWORD" \
+    -alias "${MASTER_KEY_ALIAS}" \
+    -file "${MASTER_CERTIFICATE}" \
+    -trustcacerts \
+    -noprompt
+
+  keytool -importcert -v \
+    -keystore "${SYSTEM_KEYSTORE}" \
+    -storepass:env "PASSWORD" \
+    -alias "${CLOUD_KEY_ALIAS}" \
+    -file "${CLOUD_CERTIFICATE}" \
+    -trustcacerts \
+    -noprompt
+
+  keytool -certreq -v \
+    -keystore "${SYSTEM_KEYSTORE}" \
+    -storepass:env "PASSWORD" \
+    -alias "${SYSTEM_KEY_ALIAS}" \
+    -keypass:env "PASSWORD" |
+    keytool -gencert -v \
+      -keystore "${CLOUD_KEYSTORE}" \
+      -storepass:env "PASSWORD" \
+      -validity "3650" \
+      -alias "${CLOUD_KEY_ALIAS}" \
+      -keypass:env "PASSWORD" \
+      -ext "SubjectAlternativeName=dns:${SYSTEM_DOCKER_DNS_NAME},dns:localhost,ip:127.0.0.1" \
+      -rfc |
+    keytool -importcert \
+      -keystore "${SYSTEM_KEYSTORE}" \
+      -storepass:env "PASSWORD" \
+      -alias "${SYSTEM_KEY_ALIAS}" \
+      -keypass:env "PASSWORD" \
+      -trustcacerts \
+      -noprompt
+}
+
+create_truststore() {
+  local TRUSTSTORE=$1
+  local ARGC=$#
+  local ARGV=("$@")
+
+  for ((j = 1; j < ARGC; j = j + 2)); do
+    keytool -importcert -v \
+      -keystore "${TRUSTSTORE}" \
+      -storepass:env "PASSWORD" \
+      -file "${ARGV[j]}" \
+      -alias "${ARGV[j + 1]}" \
+      -trustcacerts \
+      -noprompt
+  done
+}
+
+create_root_keystore \
+  "cloud-root/root.p12" "arrowhead.eu"
+
+# RELAY "CLOUD"
+
+create_cloud_keystore \
+  "cloud-root/root.p12" "arrowhead.eu" \
+  "cloud-relay/conet-demo-relay.p12" "conet-demo-relay.ltu.arrowhead.eu"
+
+create_system_keystore \
+  "cloud-root/root.p12" "arrowhead.eu" \
+  "cloud-relay/conet-demo-relay.p12" "conet-demo-relay.ltu.arrowhead.eu" \
+  "cloud-relay/alpha.p12" "alpha.conet-demo-relay.ltu.arrowhead.eu" \
+  "relay-alpha"
+
+create_truststore \
+  "cloud-relay/truststore.p12" \
+  "cloud-root/root.cer" "arrowhead.eu"
+
+# CONSUMER CLOUD
+
+create_cloud_keystore \
+  "cloud-root/root.p12" "arrowhead.eu" \
+  "cloud-data-consumer/conet-demo-consumer.p12" "conet-demo-consumer.ltu.arrowhead.eu"
+
+for FILE in cloud-data-consumer/*.properties; do
+  SYSTEM_KEYSTORE="${FILE%.*}.p12"
+  SYSTEM_KEYSTORE_NAME="${SYSTEM_KEYSTORE##*/}"
+  SYSTEM_NAME="${SYSTEM_KEYSTORE_NAME%.*}"
+
+  create_system_keystore \
+    "cloud-root/root.p12" "arrowhead.eu" \
+    "cloud-data-consumer/conet-demo-consumer.p12" "conet-demo-consumer.ltu.arrowhead.eu" \
+    "${SYSTEM_KEYSTORE}" "${SYSTEM_NAME}.conet-demo-consumer.ltu.arrowhead.eu" \
+    "consumer-${SYSTEM_NAME}"
+done
+
+create_truststore \
+  "cloud-data-consumer/truststore.p12" \
+  "cloud-data-consumer/conet-demo-consumer.cer" "conet-demo-consumer.ltu.arrowhead.eu" \
+  "cloud-relay/conet-demo-relay.cer" "conet-demo-relay.ltu.arrowhead.eu"
+
+# PRODUCER CLOUD
+
+create_cloud_keystore \
+  "cloud-root/root.p12" "arrowhead.eu" \
+  "cloud-data-producer/conet-demo-producer.p12" "conet-demo-producer.ltu.arrowhead.eu"
+
+for FILE in cloud-data-producer/*.properties; do
+  SYSTEM_KEYSTORE="${FILE%.*}.p12"
+  SYSTEM_KEYSTORE_NAME="${SYSTEM_KEYSTORE##*/}"
+  SYSTEM_NAME="${SYSTEM_KEYSTORE_NAME%.*}"
+
+  create_system_keystore \
+    "cloud-root/root.p12" "arrowhead.eu" \
+    "cloud-data-producer/conet-demo-producer.p12" "conet-demo-producer.ltu.arrowhead.eu" \
+    "${SYSTEM_KEYSTORE}" "${SYSTEM_NAME}.conet-demo-producer.ltu.arrowhead.eu" \
+    "producer-${SYSTEM_NAME}"
+done
+
+create_truststore \
+  "cloud-data-producer/truststore.p12" \
+  "cloud-data-producer/conet-demo-producer.cer" "conet-demo-producer.ltu.arrowhead.eu" \
+  "cloud-relay/conet-demo-relay.cer" "conet-demo-relay.ltu.arrowhead.eu"

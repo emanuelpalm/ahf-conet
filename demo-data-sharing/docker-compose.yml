@@ -50,17 +50,17 @@ services:
     ports:
       - 8441:8441
 
-#  consumer-contractsystem:
-#    container_name: consumer-contractsystem
+#  consumer-contractproxy:
+#    container_name: consumer-contractproxy
 #    image: TODO
 #    depends_on:
 #      - consumer-mysql
 #      - consumer-orchestrator
 #      - consumer-serviceregistry
 #    volumes:
-#      - ./cloud-data-consumer/contractsystem.p12:/contractsystem/certificates/contractsystem.p12
-#      - ./cloud-data-consumer/truststore.p12:/contractsystem/certificates/truststore.p12
-#      - ./cloud-data-consumer/contractsystem.properties:/contractsystem/application.properties
+#      - ./cloud-data-consumer/contractproxy.p12:/contractproxy/certificates/contractproxy.p12
+#      - ./cloud-data-consumer/truststore.p12:/contractproxy/certificates/truststore.p12
+#      - ./cloud-data-consumer/contractproxy.properties:/contractproxy/application.properties
 #    ports:
 #      - 8442:8442
 
@@ -192,17 +192,17 @@ services:
 #    ports:
 #      - 8541:8541
 
-#  producer-contractsystem:
-#    container_name: producer-contractsystem
+#  producer-contractproxy:
+#    container_name: producer-contractproxy
 #    image: TODO
 #    depends_on:
 #      - producer-mysql
 #      - producer-orchestrator
 #      - producer-serviceregistry
 #    volumes:
-#      - ./cloud-data-producer/contractsystem.p12:/contractsystem/certificates/contractsystem.p12
-#      - ./cloud-data-producer/truststore.p12:/contractsystem/certificates/truststore.p12
-#      - ./cloud-data-producer/contractsystem.properties:/contractsystem/application.properties
+#      - ./cloud-data-producer/contractproxy.p12:/contractproxy/certificates/contractproxy.p12
+#      - ./cloud-data-producer/truststore.p12:/contractproxy/certificates/truststore.p12
+#      - ./cloud-data-producer/contractproxy.properties:/contractproxy/application.properties
 #    ports:
 #      - 8542:8542
 
