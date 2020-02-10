@@ -1,6 +1,0 @@
-cloud-*/**/*.crt
-cloud-*/**/*.ca
-cloud-*/**/*.jks
-cloud-*/**/*.key
-cloud-*/**/*.p12
-cloud-*/**/*.pub

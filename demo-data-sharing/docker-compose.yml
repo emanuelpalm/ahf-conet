@@ -12,12 +12,9 @@ services:
     volumes:
       - ./cloud-relay/alpha.xml:/opt/activemq/conf/activemq.xml
       - ./cloud-relay/alpha-jetty.xml:/opt/activemq/conf/alpha-jetty.xml
-      - ./cloud-relay/alpha.p12:/opt/activemq/conf/keystore.p12
-      - ./cloud-relay/truststore.p12:/opt/activemq/conf/truststore.p12
+      - ./cloud-relay/crypto/alpha.p12:/opt/activemq/conf/keystore.p12
+      - ./cloud-relay/crypto/truststore.p12:/opt/activemq/conf/truststore.p12
     ports:
-      - 61613:61613
-      - 61614:61614
-      - 61616:61616
       - 61617:61617
       - 8161:8161 # Web console.
     networks:
@@ -30,23 +27,18 @@ services:
 
   consumer-mgmt-tool:
     container_name: mgmt-tool.consumer
-    image: svetlint/management-tool
+    image: management-tool
     environment:
-      - REACT_APP_ARROWHEAD_AUTH_URL=https://172.23.2.13:8441
-      #- REACT_APP_ARROWHEAD_EH_URL=https://172.23.2.16:8444
-      - REACT_APP_ARROWHEAD_GK_URL=https://172.23.2.17:8445
-      - REACT_APP_ARROWHEAD_GW_URL=https://172.23.2.18:8446
-      - REACT_APP_ARROWHEAD_ORCH_URL=https://172.23.2.19:8447
-      - REACT_APP_ARROWHEAD_SR_URL=https://172.23.2.20:8448
+      - ARROWHEAD_AUTH_URL=https://172.23.2.13:8441
+      #- ARROWHEAD_EH_URL=https://172.23.2.13:8442
+      - ARROWHEAD_GK_URL=https://172.23.2.13:8443
+      - ARROWHEAD_GW_URL=https://172.23.2.13:8444
+      - ARROWHEAD_ORCH_URL=https://172.23.2.13:8445
+      - ARROWHEAD_SR_URL=https://172.23.2.13:8446
     depends_on:
-      - consumer-authorization
-      #- consumer-eventhandler
-      - consumer-gatekeeper
-      - consumer-gateway
-      - consumer-orchestrator
-      - consumer-serviceregistry
+      - consumer-core
     ports:
-      - 4000:5000
+      - 80:80
     networks:
       clouds:
         ipv4_address: 172.23.2.11
@@ -63,18 +55,42 @@ services:
       clouds:
         ipv4_address: 172.23.2.12
 
-  consumer-authorization:
-    container_name: authorization.consumer
-    image: svetlint/authorization:latest
+  consumer-core:
+    container_name: core.consumer
+    image: arrowhead-core-all
     depends_on:
       - consumer-mysql
-      - consumer-serviceregistry
     volumes:
-      - ./cloud-data-consumer/authorization.p12:/authorization/certificates/authorization.p12
-      - ./cloud-data-consumer/truststore.p12:/authorization/certificates/truststore.p12
-      - ./cloud-data-consumer/authorization.properties:/authorization/application.properties
+      - ./cloud-data-consumer/crypto/authorization.p12:/opt/arrowhead-core/authorization/certificates/authorization.p12
+      - ./cloud-data-consumer/crypto/truststore.p12:/opt/arrowhead-core/authorization/certificates/truststore.p12
+      - ./cloud-data-consumer/authorization.properties:/opt/arrowhead-core/authorization/application.properties
+
+      #- ./cloud-data-consumer/crypto/eventhandler.p12:/opt/arrowhead-core/eventhandler/certificates/eventhandler.p12
+      #- ./cloud-data-consumer/crypto/truststore.p12:/opt/arrowhead-core/eventhandler/certificates/truststore.p12
+      #- ./cloud-data-consumer/eventhandler.properties:/opt/arrowhead-core/eventhandler/application.properties
+
+      - ./cloud-data-consumer/crypto/gatekeeper.p12:/opt/arrowhead-core/gatekeeper/certificates/gatekeeper.p12
+      - ./cloud-data-consumer/crypto/truststore.p12:/opt/arrowhead-core/gatekeeper/certificates/truststore.p12
+      - ./cloud-data-consumer/gatekeeper.properties:/opt/arrowhead-core/gatekeeper/application.properties
+
+      - ./cloud-data-consumer/crypto/gateway.p12:/opt/arrowhead-core/gateway/certificates/gateway.p12
+      - ./cloud-data-consumer/crypto/truststore.p12:/opt/arrowhead-core/gateway/certificates/truststore.p12
+      - ./cloud-data-consumer/gateway.properties:/opt/arrowhead-core/gateway/application.properties
+
+      - ./cloud-data-consumer/crypto/orchestrator.p12:/opt/arrowhead-core/orchestrator/certificates/orchestrator.p12
+      - ./cloud-data-consumer/crypto/truststore.p12:/opt/arrowhead-core/orchestrator/certificates/truststore.p12
+      - ./cloud-data-consumer/orchestrator.properties:/opt/arrowhead-core/orchestrator/application.properties
+
+      - ./cloud-data-consumer/crypto/serviceregistry.p12:/opt/arrowhead-core/serviceregistry/certificates/serviceregistry.p12
+      - ./cloud-data-consumer/crypto/truststore.p12:/opt/arrowhead-core/serviceregistry/certificates/truststore.p12
+      - ./cloud-data-consumer/serviceregistry.properties:/opt/arrowhead-core/serviceregistry/application.properties
     ports:
       - 8441:8441
+      #- 8442:8442
+      - 8443:8443
+      - 8444:8444
+      - 8445:8445
+      - 8446:8446
     networks:
       clouds:
         ipv4_address: 172.23.2.13
@@ -87,11 +103,11 @@ services:
 #      - consumer-orchestrator
 #      - consumer-serviceregistry
 #    volumes:
-#      - ./cloud-data-consumer/contractproxy.p12:/contractproxy/certificates/contractproxy.p12
-#      - ./cloud-data-consumer/truststore.p12:/contractproxy/certificates/truststore.p12
+#      - ./cloud-data-consumer/crypto/contractproxy.p12:/contractproxy/certificates/contractproxy.p12
+#      - ./cloud-data-consumer/crypto/truststore.p12:/contractproxy/certificates/truststore.p12
 #      - ./cloud-data-consumer/contractproxy.properties:/contractproxy/application.properties
 #    ports:
-#      - 8442:8442
+#      - 8450:8450
 #    networks:
 #      clouds:
 #        ipv4_address: 172.23.2.14
@@ -105,94 +121,14 @@ services:
 #      - consumer-serviceregistry
 #      - consumer-contract_system
 #    volumes:
-#      - ./cloud-data-consumer/dataproducer.p12:/dataproducer/certificates/dataproducer.p12
-#      - ./cloud-data-consumer/truststore.p12:/dataproducer/certificates/truststore.p12
+#      - ./cloud-data-consumer/crypto/dataproducer.p12:/dataproducer/certificates/dataproducer.p12
+#      - ./cloud-data-consumer/crypto/truststore.p12:/dataproducer/certificates/truststore.p12
 #      - ./cloud-data-consumer/dataproducer.properties:/dataproducer/application.properties
 #    ports:
-#      - 8443:8443
+#      - 8451:8451
 #    networks:
 #      clouds:
 #        ipv4_address: 172.23.2.15
-
-#  consumer-eventhandler:
-#    container_name: eventhandler.consumer
-#    image: svetlint/eventhandler:latest
-#    depends_on:
-#      - consumer-mysql
-#      - consumer-serviceregistry
-#    volumes:
-#      - ./cloud-data-consumer/eventhandler.p12:/eventhandler/certificates/eventhandler.p12
-#      - ./cloud-data-consumer/truststore.p12:/eventhandler/certificates/truststore.p12
-#      - ./cloud-data-consumer/eventhandler.properties:/eventhandler/application.properties
-#    ports:
-#      - 8444:8444
-#    networks:
-#      clouds:
-#        ipv4_address: 172.23.2.16
-
-  consumer-gatekeeper:
-    container_name: gatekeeper.consumer
-    image: svetlint/gatekeeper:latest
-    depends_on:
-      - consumer-mysql
-      - consumer-serviceregistry
-    volumes:
-      - ./cloud-data-consumer/gatekeeper.p12:/gatekeeper/certificates/gatekeeper.p12
-      - ./cloud-data-consumer/truststore.p12:/gatekeeper/certificates/truststore.p12
-      - ./cloud-data-consumer/gatekeeper.properties:/gatekeeper/application.properties
-    ports:
-      - 8445:8445
-    networks:
-      clouds:
-        ipv4_address: 172.23.2.17
-
-  consumer-gateway:
-    container_name: gateway.consumer
-    image: svetlint/gateway:latest
-    depends_on:
-      - consumer-mysql
-      - consumer-serviceregistry
-    volumes:
-      - ./cloud-data-consumer/gateway.p12:/gateway/certificates/gateway.p12
-      - ./cloud-data-consumer/truststore.p12:/gateway/certificates/truststore.p12
-      - ./cloud-data-consumer/gateway.properties:/gateway/application.properties
-    ports:
-      - 8446:8446
-    networks:
-      clouds:
-        ipv4_address: 172.23.2.18
-
-  consumer-orchestrator:
-    container_name: orchestrator.consumer
-    image: svetlint/orchestrator:latest
-    depends_on:
-      - consumer-mysql
-      - consumer-serviceregistry
-      - consumer-gatekeeper
-    volumes:
-      - ./cloud-data-consumer/orchestrator.p12:/orchestrator/certificates/orchestrator.p12
-      - ./cloud-data-consumer/truststore.p12:/orchestrator/certificates/truststore.p12
-      - ./cloud-data-consumer/orchestrator.properties:/orchestrator/application.properties
-    ports:
-      - 8447:8447
-    networks:
-      clouds:
-        ipv4_address: 172.23.2.19
-
-  consumer-serviceregistry:
-    container_name: serviceregistry.consumer
-    image: svetlint/serviceregistry:latest
-    depends_on:
-      - consumer-mysql
-    volumes:
-      - ./cloud-data-consumer/serviceregistry.p12:/serviceregistry/certificates/serviceregistry.p12
-      - ./cloud-data-consumer/truststore.p12:/serviceregistry/certificates/truststore.p12
-      - ./cloud-data-consumer/serviceregistry.properties:/serviceregistry/application.properties
-    ports:
-      - 8448:8448
-    networks:
-      clouds:
-        ipv4_address: 172.23.2.20
 
   ############################################
   ###         DATA PRODUCER CLOUD          ###
@@ -200,21 +136,16 @@ services:
 
   producer-mgmt-tool:
     container_name: mgmt-tool.producer
-    image: svetlint/management-tool
+    image: management-tool
     environment:
-      - REACT_APP_ARROWHEAD_AUTH_URL=https://172.23.3.13:8541
-      #- REACT_APP_ARROWHEAD_EH_URL=https://172.23.3.16:8544
-      - REACT_APP_ARROWHEAD_GK_URL=https://172.23.3.17:8545
-      - REACT_APP_ARROWHEAD_GW_URL=https://172.23.3.18:8546
-      - REACT_APP_ARROWHEAD_ORCH_URL=https://172.23.3.19:8547
-      - REACT_APP_ARROWHEAD_SR_URL=https://172.23.3.20:8548
+      - ARROWHEAD_AUTH_URL=https://172.23.3.13:8541
+      #- ARROWHEAD_EH_URL=https://172.23.3.13:8542
+      - ARROWHEAD_GK_URL=https://172.23.3.13:8543
+      - ARROWHEAD_GW_URL=https://172.23.3.13:8544
+      - ARROWHEAD_ORCH_URL=https://172.23.3.13:8545
+      - ARROWHEAD_SR_URL=https://172.23.3.13:8546
     depends_on:
-      - producer-authorization
-      #- producer-eventhandler
-      - producer-gatekeeper
-      - producer-gateway
-      - producer-orchestrator
-      - producer-serviceregistry
+      - producer-core
     ports:
       - 5000:5000
     networks:
@@ -233,18 +164,42 @@ services:
       clouds:
         ipv4_address: 172.23.3.12
 
-  producer-authorization:
-    container_name: authorization.producer
-    image: svetlint/authorization:latest
+  producer-core:
+    container_name: core.producer
+    image: arrowhead-core-all
     depends_on:
       - producer-mysql
-      - producer-serviceregistry
     volumes:
-      - ./cloud-data-producer/authorization.p12:/authorization/certificates/authorization.p12
-      - ./cloud-data-producer/truststore.p12:/authorization/certificates/truststore.p12
-      - ./cloud-data-producer/authorization.properties:/authorization/application.properties
+      - ./cloud-data-producer/crypto/authorization.p12:/opt/arrowhead-core/authorization/certificates/authorization.p12
+      - ./cloud-data-producer/crypto/truststore.p12:/opt/arrowhead-core/authorization/certificates/truststore.p12
+      - ./cloud-data-producer/authorization.properties:/opt/arrowhead-core/authorization/application.properties
+
+      #- ./cloud-data-producer/crypto/eventhandler.p12:/opt/arrowhead-core/eventhandler/certificates/eventhandler.p12
+      #- ./cloud-data-producer/crypto/truststore.p12:/opt/arrowhead-core/eventhandler/certificates/truststore.p12
+      #- ./cloud-data-producer/eventhandler.properties:/opt/arrowhead-core/eventhandler/application.properties
+
+      - ./cloud-data-producer/crypto/gatekeeper.p12:/opt/arrowhead-core/gatekeeper/certificates/gatekeeper.p12
+      - ./cloud-data-producer/crypto/truststore.p12:/opt/arrowhead-core/gatekeeper/certificates/truststore.p12
+      - ./cloud-data-producer/gatekeeper.properties:/opt/arrowhead-core/gatekeeper/application.properties
+
+      - ./cloud-data-producer/crypto/gateway.p12:/opt/arrowhead-core/gateway/certificates/gateway.p12
+      - ./cloud-data-producer/crypto/truststore.p12:/opt/arrowhead-core/gateway/certificates/truststore.p12
+      - ./cloud-data-producer/gateway.properties:/opt/arrowhead-core/gateway/application.properties
+
+      - ./cloud-data-producer/crypto/orchestrator.p12:/opt/arrowhead-core/orchestrator/certificates/orchestrator.p12
+      - ./cloud-data-producer/crypto/truststore.p12:/opt/arrowhead-core/orchestrator/certificates/truststore.p12
+      - ./cloud-data-producer/orchestrator.properties:/opt/arrowhead-core/orchestrator/application.properties
+
+      - ./cloud-data-producer/crypto/serviceregistry.p12:/opt/arrowhead-core/serviceregistry/certificates/serviceregistry.p12
+      - ./cloud-data-producer/crypto/truststore.p12:/opt/arrowhead-core/serviceregistry/certificates/truststore.p12
+      - ./cloud-data-producer/serviceregistry.properties:/opt/arrowhead-core/serviceregistry/application.properties
     ports:
       - 8541:8541
+      #- 8542:8542
+      - 8543:8543
+      - 8544:8544
+      - 8545:8545
+      - 8546:8546
     networks:
       clouds:
         ipv4_address: 172.23.3.13
@@ -257,11 +212,11 @@ services:
 #      - producer-orchestrator
 #      - producer-serviceregistry
 #    volumes:
-#      - ./cloud-data-producer/contractproxy.p12:/contractproxy/certificates/contractproxy.p12
-#      - ./cloud-data-producer/truststore.p12:/contractproxy/certificates/truststore.p12
+#      - ./cloud-data-producer/crypto/contractproxy.p12:/contractproxy/certificates/contractproxy.p12
+#      - ./cloud-data-producer/crypto/truststore.p12:/contractproxy/certificates/truststore.p12
 #      - ./cloud-data-producer/contractproxy.properties:/contractproxy/application.properties
 #    ports:
-#      - 8542:8542
+#      - 8550:8550
 #    networks:
 #      clouds:
 #        ipv4_address: 172.23.3.14
@@ -275,94 +230,14 @@ services:
 #      - producer-serviceregistry
 #      - producer-contract_system
 #    volumes:
-#      - ./cloud-data-producer/dataproducer.p12:/dataproducer/certificates/dataproducer.p12
-#      - ./cloud-data-producer/truststore.p12:/dataproducer/certificates/truststore.p12
+#      - ./cloud-data-producer/crypto/dataproducer.p12:/dataproducer/certificates/dataproducer.p12
+#      - ./cloud-data-producer/crypto/truststore.p12:/dataproducer/certificates/truststore.p12
 #      - ./cloud-data-producer/dataproducer.properties:/dataproducer/application.properties
 #    ports:
-#      - 8543:8543
+#      - 8551:8551
 #    networks:
 #      clouds:
 #        ipv4_address: 172.23.3.15
-
-#  producer-eventhandler:
-#    container_name: eventhandler.producer
-#    image: svetlint/eventhandler:latest
-#    depends_on:
-#      - producer-mysql
-#      - producer-serviceregistry
-#    volumes:
-#      - ./cloud-data-producer/eventhandler.p12:/eventhandler/certificates/eventhandler.p12
-#      - ./cloud-data-producer/truststore.p12:/eventhandler/certificates/truststore.p12
-#      - ./cloud-data-producer/eventhandler.properties:/eventhandler/application.properties
-#    ports:
-#      - 8544:8544
-#    networks:
-#      clouds:
-#        ipv4_address: 172.23.3.16
-
-  producer-gatekeeper:
-    container_name: gatekeeper.producer
-    image: svetlint/gatekeeper:latest
-    depends_on:
-      - producer-mysql
-      - producer-serviceregistry
-    volumes:
-      - ./cloud-data-producer/gatekeeper.p12:/gatekeeper/certificates/gatekeeper.p12
-      - ./cloud-data-producer/truststore.p12:/gatekeeper/certificates/truststore.p12
-      - ./cloud-data-producer/gatekeeper.properties:/gatekeeper/application.properties
-    ports:
-      - 8545:8545
-    networks:
-      clouds:
-        ipv4_address: 172.23.3.17
-
-  producer-gateway:
-    container_name: gateway.producer
-    image: svetlint/gateway:latest
-    depends_on:
-      - producer-mysql
-      - producer-serviceregistry
-    volumes:
-      - ./cloud-data-producer/gateway.p12:/gateway/certificates/gateway.p12
-      - ./cloud-data-producer/truststore.p12:/gateway/certificates/truststore.p12
-      - ./cloud-data-producer/gateway.properties:/gateway/application.properties
-    ports:
-      - 8546:8546
-    networks:
-      clouds:
-        ipv4_address: 172.23.3.18
-
-  producer-orchestrator:
-    container_name: orchestrator.producer
-    image: svetlint/orchestrator:latest
-    depends_on:
-      - producer-mysql
-      - producer-serviceregistry
-      - producer-gatekeeper
-    volumes:
-      - ./cloud-data-producer/orchestrator.p12:/orchestrator/certificates/orchestrator.p12
-      - ./cloud-data-producer/truststore.p12:/orchestrator/certificates/truststore.p12
-      - ./cloud-data-producer/orchestrator.properties:/orchestrator/application.properties
-    ports:
-      - 8547:8547
-    networks:
-      clouds:
-        ipv4_address: 172.23.3.19
-
-  producer-serviceregistry:
-    container_name: serviceregistry.producer
-    image: svetlint/serviceregistry:latest
-    depends_on:
-      - producer-mysql
-    volumes:
-      - ./cloud-data-producer/serviceregistry.p12:/serviceregistry/certificates/serviceregistry.p12
-      - ./cloud-data-producer/truststore.p12:/serviceregistry/certificates/truststore.p12
-      - ./cloud-data-producer/serviceregistry.properties:/serviceregistry/application.properties
-    ports:
-      - 8548:8548
-    networks:
-      clouds:
-        ipv4_address: 172.23.3.20
 
 volumes:
   consumer_mysql_vol:
