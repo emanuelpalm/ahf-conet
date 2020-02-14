@@ -1,11 +1,14 @@
 DROP DATABASE IF EXISTS `arrowhead`;
-CREATE DATABASE IF NOT EXISTS `arrowhead`;
+CREATE DATABASE `arrowhead`;
 USE `arrowhead`;
+
+-- create tables
+
+CREATE DATABASE IF NOT EXISTS `arrowhead`;
 
 -- Common
 
-DROP TABLE IF EXISTS `cloud`;
-CREATE TABLE `cloud` (
+CREATE TABLE IF NOT EXISTS `cloud` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `operator` varchar(255) NOT NULL,
   `name` varchar(255) NOT NULL,
@@ -19,8 +22,7 @@ CREATE TABLE `cloud` (
   UNIQUE KEY `cloud` (`operator`,`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS `relay`;
-CREATE TABLE `relay` (
+CREATE TABLE IF NOT EXISTS `relay` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `address` varchar(255) NOT NULL,
   `port` int(11) NOT NULL,
@@ -33,8 +35,7 @@ CREATE TABLE `relay` (
   UNIQUE KEY `pair` (`address`, `port`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS `cloud_gatekeeper_relay`;
-CREATE TABLE `cloud_gatekeeper_relay` (
+CREATE TABLE IF NOT EXISTS `cloud_gatekeeper_relay` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `cloud_id` bigint(20) NOT NULL,
   `relay_id` bigint(20) NOT NULL,
@@ -46,8 +47,7 @@ CREATE TABLE `cloud_gatekeeper_relay` (
   CONSTRAINT `gk_relay_constr` FOREIGN KEY (`relay_id`) REFERENCES `relay` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS `cloud_gateway_relay`;
-CREATE TABLE `cloud_gateway_relay` (
+CREATE TABLE IF NOT EXISTS `cloud_gateway_relay` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `cloud_id` bigint(20) NOT NULL,
   `relay_id` bigint(20) NOT NULL,
@@ -59,8 +59,7 @@ CREATE TABLE `cloud_gateway_relay` (
   CONSTRAINT `gw_relay_constr` FOREIGN KEY (`relay_id`) REFERENCES `relay` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS `system_`;
-CREATE TABLE `system_` (
+CREATE TABLE IF NOT EXISTS `system_` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `system_name` varchar(255) NOT NULL,
   `address` varchar(255) NOT NULL,
@@ -72,8 +71,7 @@ CREATE TABLE `system_` (
   UNIQUE KEY `triple` (`system_name`,`address`,`port`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS `service_definition`;
-CREATE TABLE `service_definition` (
+CREATE TABLE IF NOT EXISTS `service_definition` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `service_definition` varchar(255) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -82,8 +80,7 @@ CREATE TABLE `service_definition` (
   UNIQUE KEY `service_definition` (`service_definition`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS `service_interface`;
-CREATE TABLE `service_interface` (
+CREATE TABLE IF NOT EXISTS `service_interface` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `interface_name` varchar(255) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -92,13 +89,12 @@ CREATE TABLE `service_interface` (
   UNIQUE KEY `interface` (`interface_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-INSERT INTO `service_interface` (interface_name) VALUES ('HTTP-SECURE-JSON');
-INSERT INTO `service_interface` (interface_name) VALUES ('HTTP-INSECURE-JSON');
+INSERT IGNORE INTO `service_interface` (interface_name) VALUES ('HTTP-SECURE-JSON');
+INSERT IGNORE INTO `service_interface` (interface_name) VALUES ('HTTP-INSECURE-JSON');
 
 -- Service Registry
 
-DROP TABLE IF EXISTS `service_registry`;
-CREATE TABLE `service_registry` (
+CREATE TABLE IF NOT EXISTS `service_registry` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `service_id` bigint(20) NOT NULL,
   `system_id` bigint(20) NOT NULL,
@@ -116,8 +112,7 @@ CREATE TABLE `service_registry` (
   CONSTRAINT `system` FOREIGN KEY (`system_id`) REFERENCES `system_` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS `service_registry_interface_connection`;
-CREATE TABLE `service_registry_interface_connection` (
+CREATE TABLE IF NOT EXISTS `service_registry_interface_connection` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `service_registry_id` bigint(20) NOT NULL,
   `interface_id` bigint(20) NOT NULL,
@@ -132,8 +127,7 @@ CREATE TABLE `service_registry_interface_connection` (
 
 -- Authorization
 
-DROP TABLE IF EXISTS `authorization_intra_cloud`;
-CREATE TABLE `authorization_intra_cloud` (
+CREATE TABLE IF NOT EXISTS `authorization_intra_cloud` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -147,10 +141,9 @@ CREATE TABLE `authorization_intra_cloud` (
   CONSTRAINT `service_intra_auth` FOREIGN KEY (`service_id`) REFERENCES `service_definition` (`id`) ON DELETE CASCADE,
   CONSTRAINT `provider` FOREIGN KEY (`provider_system_id`) REFERENCES `system_` (`id`) ON DELETE CASCADE,
   CONSTRAINT `consumer` FOREIGN KEY (`consumer_system_id`) REFERENCES `system_` (`id`) ON DELETE CASCADE
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS `authorization_inter_cloud`;
-CREATE TABLE `authorization_inter_cloud` (
+CREATE TABLE IF NOT EXISTS `authorization_inter_cloud` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `consumer_cloud_id` bigint(20) NOT NULL,
   `provider_system_id` bigint(20) NOT NULL,
@@ -165,8 +158,7 @@ CREATE TABLE `authorization_inter_cloud` (
   CONSTRAINT `provider_inter_auth` FOREIGN KEY (`provider_system_id`) REFERENCES `system_` (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS `authorization_inter_cloud_interface_connection`;
-CREATE TABLE `authorization_inter_cloud_interface_connection` (
+CREATE TABLE IF NOT EXISTS `authorization_inter_cloud_interface_connection` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `authorization_inter_cloud_id` bigint(20) NOT NULL,
   `interface_id` bigint(20) NOT NULL,
@@ -179,8 +171,7 @@ CREATE TABLE `authorization_inter_cloud_interface_connection` (
   CONSTRAINT `auth_inter_cloud` FOREIGN KEY (`authorization_inter_cloud_id`) REFERENCES `authorization_inter_cloud` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS `authorization_intra_cloud_interface_connection`;
-CREATE TABLE `authorization_intra_cloud_interface_connection` (
+CREATE TABLE IF NOT EXISTS `authorization_intra_cloud_interface_connection` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `authorization_intra_cloud_id` bigint(20) NOT NULL,
   `interface_id` bigint(20) NOT NULL,
@@ -195,8 +186,7 @@ CREATE TABLE `authorization_intra_cloud_interface_connection` (
 
 -- Orchestrator
 
-DROP TABLE IF EXISTS `orchestrator_store`;
-CREATE TABLE `orchestrator_store` (
+CREATE TABLE IF NOT EXISTS `orchestrator_store` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `consumer_system_id` bigint(20) NOT NULL,
   `provider_system_id` bigint(20) NOT NULL,
@@ -215,8 +205,7 @@ CREATE TABLE `orchestrator_store` (
   CONSTRAINT `service_intf_orch` FOREIGN KEY (`service_interface_id`) REFERENCES `service_interface` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS `foreign_system`;
-CREATE TABLE `foreign_system` (
+CREATE TABLE IF NOT EXISTS `foreign_system` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `provider_cloud_id` bigint(20) NOT NULL,
   `system_name` varchar(255) NOT NULL,
@@ -232,8 +221,7 @@ CREATE TABLE `foreign_system` (
 
 -- Logs
 
-DROP TABLE IF EXISTS `logs`;
-CREATE TABLE `logs` (
+CREATE TABLE IF NOT EXISTS `logs` (
   `log_id` varchar(100) NOT NULL,
   `entry_date` timestamp NULL DEFAULT NULL,
   `logger` varchar(100) DEFAULT NULL,
@@ -245,8 +233,7 @@ CREATE TABLE `logs` (
 
 -- Event Handler
 
-DROP TABLE IF EXISTS `event_type`;
-  CREATE TABLE `event_type` (
+CREATE TABLE IF NOT EXISTS `event_type` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `event_type_name` varchar(255) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -255,8 +242,7 @@ DROP TABLE IF EXISTS `event_type`;
   UNIQUE KEY `eventtype` (`event_type_name`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS `subscription`;
-CREATE TABLE `subscription` (
+CREATE TABLE IF NOT EXISTS `subscription` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `system_id` bigint(20) NOT NULL,
   `event_type_id` bigint(20) NOT NULL,
@@ -274,8 +260,7 @@ CREATE TABLE `subscription` (
   CONSTRAINT `event_type` FOREIGN KEY (`event_type_id`) REFERENCES `event_type` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS `subscription_publisher_connection`;
-CREATE TABLE `subscription_publisher_connection` (
+CREATE TABLE IF NOT EXISTS `subscription_publisher_connection` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `subscription_id` bigint(20) NOT NULL,
   `system_id` bigint(20) NOT NULL,
@@ -290,16 +275,14 @@ CREATE TABLE `subscription_publisher_connection` (
 
 -- Choreographer
 
-DROP TABLE IF EXISTS `choreographer_action_plan`;
-CREATE TABLE `choreographer_action_plan` (
+CREATE TABLE IF NOT EXISTS `choreographer_action_plan` (
   `id` bigint(20) PRIMARY KEY AUTO_INCREMENT,
   `action_plan_name` varchar(255) UNIQUE NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-)ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS `choreographer_action`;
-CREATE TABLE `choreographer_action` (
+CREATE TABLE IF NOT EXISTS `choreographer_action` (
   `id` bigint(20) PRIMARY KEY AUTO_INCREMENT,
   `action_name` varchar(255) UNIQUE NOT NULL,
   `next_action_id` bigint(20) DEFAULT NULL,
@@ -308,16 +291,14 @@ CREATE TABLE `choreographer_action` (
   CONSTRAINT `next_action` FOREIGN KEY (`next_action_id`) REFERENCES `choreographer_action` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS `choreographer_action_step`;
-CREATE TABLE `choreographer_action_step` (
+CREATE TABLE IF NOT EXISTS `choreographer_action_step` (
   `id` bigint(20) PRIMARY KEY AUTO_INCREMENT,
   `name` varchar(255) UNIQUE NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS `choreographer_action_plan_action_connection`;
-CREATE TABLE `choreographer_action_plan_action_connection` (
+CREATE TABLE IF NOT EXISTS `choreographer_action_plan_action_connection` (
   `id` bigint(20) PRIMARY KEY AUTO_INCREMENT,
   `action_plan_id` bigint(20) NOT NULL,
   `action_id` bigint(20) NOT NULL,
@@ -327,8 +308,7 @@ CREATE TABLE `choreographer_action_plan_action_connection` (
   CONSTRAINT `action_fk1` FOREIGN KEY (`action_id`) REFERENCES `choreographer_action` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS `choreographer_action_action_step_connection`;
-CREATE TABLE `choreographer_action_action_step_connection` (
+CREATE TABLE IF NOT EXISTS `choreographer_action_action_step_connection` (
   `id` bigint(20) PRIMARY KEY AUTO_INCREMENT,
   `action_id` bigint(20) NOT NULL,
   `action_step_id` bigint(20) NOT NULL,
@@ -338,8 +318,7 @@ CREATE TABLE `choreographer_action_action_step_connection` (
   CONSTRAINT `action_step_fk1` FOREIGN KEY (`action_step_id`) REFERENCES `choreographer_action_step` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS `choreographer_action_step_service_definition_connection`;
-CREATE TABLE `choreographer_action_step_service_definition_connection` (
+CREATE TABLE IF NOT EXISTS `choreographer_action_step_service_definition_connection` (
   `id` bigint(20) PRIMARY KEY AUTO_INCREMENT,
   `action_step_id` bigint(20) NOT NULL,
   `service_definition_id` bigint(20) NOT NULL,
@@ -349,8 +328,7 @@ CREATE TABLE `choreographer_action_step_service_definition_connection` (
   CONSTRAINT `action_step` FOREIGN KEY (`action_step_id`) REFERENCES `choreographer_action_step` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS `choreographer_next_action_step`;
-CREATE TABLE `choreographer_next_action_step` (
+CREATE TABLE IF NOT EXISTS `choreographer_next_action_step` (
   `id` bigint(20) PRIMARY KEY AUTO_INCREMENT,
   `action_step_id` bigint(20) NOT NULL,
   `next_action_step_id` bigint(20) NOT NULL,
@@ -363,112 +341,161 @@ CREATE TABLE `choreographer_next_action_step` (
 -- Set up privileges
 
 -- Service Registry
-DROP USER IF EXISTS 'service_registry'@'localhost';
 CREATE USER IF NOT EXISTS 'service_registry'@'localhost' IDENTIFIED BY 'ZzNNpxrbZGVvfJ8';
+CREATE USER IF NOT EXISTS 'service_registry'@'%' IDENTIFIED BY 'ZzNNpxrbZGVvfJ8';
+
+REVOKE ALL, GRANT OPTION FROM 'service_registry'@'localhost';
+
+GRANT ALL PRIVILEGES ON `arrowhead`.`system_` TO 'service_registry'@'localhost';
+GRANT ALL PRIVILEGES ON `arrowhead`.`service_definition` TO 'service_registry'@'localhost';
+GRANT ALL PRIVILEGES ON `arrowhead`.`service_interface` TO 'service_registry'@'localhost';
+GRANT ALL PRIVILEGES ON `arrowhead`.`service_registry` TO 'service_registry'@'localhost';
+GRANT ALL PRIVILEGES ON `arrowhead`.`service_registry_interface_connection` TO 'service_registry'@'localhost';
 GRANT ALL PRIVILEGES ON `arrowhead`.`cloud` TO 'service_registry'@'localhost';
 GRANT ALL PRIVILEGES ON `arrowhead`.`relay` TO 'service_registry'@'localhost';
 GRANT ALL PRIVILEGES ON `arrowhead`.`cloud_gatekeeper_relay` TO 'service_registry'@'localhost';
 GRANT ALL PRIVILEGES ON `arrowhead`.`cloud_gateway_relay` TO 'service_registry'@'localhost';
-GRANT ALL PRIVILEGES ON `arrowhead`.`service_registry` TO 'service_registry'@'localhost';
-GRANT ALL PRIVILEGES ON `arrowhead`.`service_registry_interface_connection` TO 'service_registry'@'localhost';
-GRANT ALL PRIVILEGES ON `arrowhead`.`service_definition` TO 'service_registry'@'localhost';
-GRANT ALL PRIVILEGES ON `arrowhead`.`service_interface` TO 'service_registry'@'localhost';
-GRANT ALL PRIVILEGES ON `arrowhead`.`system_` TO 'service_registry'@'localhost';
+GRANT ALL PRIVILEGES ON `arrowhead`.`authorization_intra_cloud` TO 'service_registry'@'localhost';
+GRANT ALL PRIVILEGES ON `arrowhead`.`authorization_intra_cloud_interface_connection` TO 'service_registry'@'localhost';
+GRANT ALL PRIVILEGES ON `arrowhead`.`authorization_inter_cloud` TO 'service_registry'@'localhost';
+GRANT ALL PRIVILEGES ON `arrowhead`.`authorization_inter_cloud_interface_connection` TO 'service_registry'@'localhost';
+GRANT ALL PRIVILEGES ON `arrowhead`.`orchestrator_store` TO 'service_registry'@'localhost';
+GRANT ALL PRIVILEGES ON `arrowhead`.`subscription` TO 'service_registry'@'localhost';
+GRANT ALL PRIVILEGES ON `arrowhead`.`subscription_publisher_connection` TO 'service_registry'@'localhost';
+GRANT ALL PRIVILEGES ON `arrowhead`.`choreographer_action_plan` TO 'service_registry'@'localhost';
+GRANT ALL PRIVILEGES ON `arrowhead`.`choreographer_action` TO 'service_registry'@'localhost';
+GRANT ALL PRIVILEGES ON `arrowhead`.`choreographer_action_step` TO 'service_registry'@'localhost';
+GRANT ALL PRIVILEGES ON `arrowhead`.`choreographer_action_plan_action_connection` TO 'service_registry'@'localhost';
+GRANT ALL PRIVILEGES ON `arrowhead`.`choreographer_action_action_step_connection` TO 'service_registry'@'localhost';
+GRANT ALL PRIVILEGES ON `arrowhead`.`choreographer_action_step_service_definition_connection` TO 'service_registry'@'localhost';
+GRANT ALL PRIVILEGES ON `arrowhead`.`choreographer_next_action_step` TO 'service_registry'@'localhost';
 GRANT ALL PRIVILEGES ON `arrowhead`.`logs` TO 'service_registry'@'localhost';
 
-DROP USER IF EXISTS 'service_registry'@'%';
-CREATE USER IF NOT EXISTS 'service_registry'@'%' IDENTIFIED BY 'ZzNNpxrbZGVvfJ8';
+REVOKE ALL, GRANT OPTION FROM 'service_registry'@'%';
+
+GRANT ALL PRIVILEGES ON `arrowhead`.`system_` TO 'service_registry'@'%';
+GRANT ALL PRIVILEGES ON `arrowhead`.`service_definition` TO 'service_registry'@'%';
+GRANT ALL PRIVILEGES ON `arrowhead`.`service_interface` TO 'service_registry'@'%';
+GRANT ALL PRIVILEGES ON `arrowhead`.`service_registry` TO 'service_registry'@'%';
+GRANT ALL PRIVILEGES ON `arrowhead`.`service_registry_interface_connection` TO 'service_registry'@'%';
 GRANT ALL PRIVILEGES ON `arrowhead`.`cloud` TO 'service_registry'@'%';
 GRANT ALL PRIVILEGES ON `arrowhead`.`relay` TO 'service_registry'@'%';
 GRANT ALL PRIVILEGES ON `arrowhead`.`cloud_gatekeeper_relay` TO 'service_registry'@'%';
 GRANT ALL PRIVILEGES ON `arrowhead`.`cloud_gateway_relay` TO 'service_registry'@'%';
-GRANT ALL PRIVILEGES ON `arrowhead`.`service_registry` TO 'service_registry'@'%';
-GRANT ALL PRIVILEGES ON `arrowhead`.`service_registry_interface_connection` TO 'service_registry'@'%';
-GRANT ALL PRIVILEGES ON `arrowhead`.`service_definition` TO 'service_registry'@'%';
-GRANT ALL PRIVILEGES ON `arrowhead`.`service_interface` TO 'service_registry'@'%';
-GRANT ALL PRIVILEGES ON `arrowhead`.`system_` TO 'service_registry'@'%';
+GRANT ALL PRIVILEGES ON `arrowhead`.`authorization_intra_cloud` TO 'service_registry'@'%';
+GRANT ALL PRIVILEGES ON `arrowhead`.`authorization_intra_cloud_interface_connection` TO 'service_registry'@'%';
+GRANT ALL PRIVILEGES ON `arrowhead`.`authorization_inter_cloud` TO 'service_registry'@'%';
+GRANT ALL PRIVILEGES ON `arrowhead`.`authorization_inter_cloud_interface_connection` TO 'service_registry'@'%';
+GRANT ALL PRIVILEGES ON `arrowhead`.`orchestrator_store` TO 'service_registry'@'%';
+GRANT ALL PRIVILEGES ON `arrowhead`.`subscription` TO 'service_registry'@'%';
+GRANT ALL PRIVILEGES ON `arrowhead`.`subscription_publisher_connection` TO 'service_registry'@'%';
+GRANT ALL PRIVILEGES ON `arrowhead`.`choreographer_action_plan` TO 'service_registry'@'%';
+GRANT ALL PRIVILEGES ON `arrowhead`.`choreographer_action` TO 'service_registry'@'%';
+GRANT ALL PRIVILEGES ON `arrowhead`.`choreographer_action_step` TO 'service_registry'@'%';
+GRANT ALL PRIVILEGES ON `arrowhead`.`choreographer_action_plan_action_connection` TO 'service_registry'@'%';
+GRANT ALL PRIVILEGES ON `arrowhead`.`choreographer_action_action_step_connection` TO 'service_registry'@'%';
+GRANT ALL PRIVILEGES ON `arrowhead`.`choreographer_action_step_service_definition_connection` TO 'service_registry'@'%';
+GRANT ALL PRIVILEGES ON `arrowhead`.`choreographer_next_action_step` TO 'service_registry'@'%';
 GRANT ALL PRIVILEGES ON `arrowhead`.`logs` TO 'service_registry'@'%';
 
+FLUSH PRIVILEGES;
+
 -- Authorization
-DROP USER IF EXISTS 'authorization'@'localhost';
 CREATE USER IF NOT EXISTS 'authorization'@'localhost' IDENTIFIED BY 'hqZFUkuHxhekio3';
+CREATE USER IF NOT EXISTS 'authorization'@'%' IDENTIFIED BY 'hqZFUkuHxhekio3';
+
+REVOKE ALL, GRANT OPTION FROM 'authorization'@'localhost';
+
+GRANT ALL PRIVILEGES ON `arrowhead`.`authorization_intra_cloud` TO 'authorization'@'localhost';
+GRANT ALL PRIVILEGES ON `arrowhead`.`authorization_intra_cloud_interface_connection` TO 'authorization'@'localhost';
+GRANT ALL PRIVILEGES ON `arrowhead`.`authorization_inter_cloud` TO 'authorization'@'localhost';
+GRANT ALL PRIVILEGES ON `arrowhead`.`authorization_inter_cloud_interface_connection` TO 'authorization'@'localhost';
+GRANT ALL PRIVILEGES ON `arrowhead`.`system_` TO 'authorization'@'localhost';
 GRANT ALL PRIVILEGES ON `arrowhead`.`cloud` TO 'authorization'@'localhost';
 GRANT ALL PRIVILEGES ON `arrowhead`.`relay` TO 'authorization'@'localhost';
 GRANT ALL PRIVILEGES ON `arrowhead`.`cloud_gatekeeper_relay` TO 'authorization'@'localhost';
 GRANT ALL PRIVILEGES ON `arrowhead`.`cloud_gateway_relay` TO 'authorization'@'localhost';
-GRANT ALL PRIVILEGES ON `arrowhead`.`authorization_inter_cloud` TO 'authorization'@'localhost';
-GRANT ALL PRIVILEGES ON `arrowhead`.`authorization_inter_cloud_interface_connection` TO 'authorization'@'localhost';
-GRANT ALL PRIVILEGES ON `arrowhead`.`authorization_intra_cloud` TO 'authorization'@'localhost';
-GRANT ALL PRIVILEGES ON `arrowhead`.`authorization_intra_cloud_interface_connection` TO 'authorization'@'localhost';
 GRANT ALL PRIVILEGES ON `arrowhead`.`service_definition` TO 'authorization'@'localhost';
 GRANT ALL PRIVILEGES ON `arrowhead`.`service_interface` TO 'authorization'@'localhost';
-GRANT ALL PRIVILEGES ON `arrowhead`.`system_` TO 'authorization'@'localhost';
 GRANT ALL PRIVILEGES ON `arrowhead`.`logs` TO 'authorization'@'localhost';
 
-DROP USER IF EXISTS 'authorization'@'%';
-CREATE USER IF NOT EXISTS 'authorization'@'%' IDENTIFIED BY 'hqZFUkuHxhekio3';
+REVOKE ALL, GRANT OPTION FROM 'authorization'@'%';
+
+GRANT ALL PRIVILEGES ON `arrowhead`.`authorization_intra_cloud` TO 'authorization'@'%';
+GRANT ALL PRIVILEGES ON `arrowhead`.`authorization_intra_cloud_interface_connection` TO 'authorization'@'%';
+GRANT ALL PRIVILEGES ON `arrowhead`.`authorization_inter_cloud` TO 'authorization'@'%';
+GRANT ALL PRIVILEGES ON `arrowhead`.`authorization_inter_cloud_interface_connection` TO 'authorization'@'%';
+GRANT ALL PRIVILEGES ON `arrowhead`.`system_` TO 'authorization'@'%';
 GRANT ALL PRIVILEGES ON `arrowhead`.`cloud` TO 'authorization'@'%';
 GRANT ALL PRIVILEGES ON `arrowhead`.`relay` TO 'authorization'@'%';
 GRANT ALL PRIVILEGES ON `arrowhead`.`cloud_gatekeeper_relay` TO 'authorization'@'%';
 GRANT ALL PRIVILEGES ON `arrowhead`.`cloud_gateway_relay` TO 'authorization'@'%';
-GRANT ALL PRIVILEGES ON `arrowhead`.`authorization_inter_cloud` TO 'authorization'@'%';
-GRANT ALL PRIVILEGES ON `arrowhead`.`authorization_inter_cloud_interface_connection` TO 'authorization'@'%';
-GRANT ALL PRIVILEGES ON `arrowhead`.`authorization_intra_cloud` TO 'authorization'@'%';
-GRANT ALL PRIVILEGES ON `arrowhead`.`authorization_intra_cloud_interface_connection` TO 'authorization'@'%';
 GRANT ALL PRIVILEGES ON `arrowhead`.`service_definition` TO 'authorization'@'%';
 GRANT ALL PRIVILEGES ON `arrowhead`.`service_interface` TO 'authorization'@'%';
-GRANT ALL PRIVILEGES ON `arrowhead`.`system_` TO 'authorization'@'%';
 GRANT ALL PRIVILEGES ON `arrowhead`.`logs` TO 'authorization'@'%';
 
+FLUSH PRIVILEGES;
+
 -- Orchestrator
-DROP USER IF EXISTS 'orchestrator'@'localhost';
 CREATE USER IF NOT EXISTS 'orchestrator'@'localhost' IDENTIFIED BY 'KbgD2mTr8DQ4vtc';
+CREATE USER IF NOT EXISTS 'orchestrator'@'%' IDENTIFIED BY 'KbgD2mTr8DQ4vtc';
+
+REVOKE ALL, GRANT OPTION FROM 'orchestrator'@'localhost';
+
+GRANT ALL PRIVILEGES ON `arrowhead`.`orchestrator_store` TO 'orchestrator'@'localhost';
+GRANT ALL PRIVILEGES ON `arrowhead`.`foreign_system` TO 'orchestrator'@'localhost';
+GRANT ALL PRIVILEGES ON `arrowhead`.`system_` TO 'orchestrator'@'localhost';
 GRANT ALL PRIVILEGES ON `arrowhead`.`cloud` TO 'orchestrator'@'localhost';
 GRANT ALL PRIVILEGES ON `arrowhead`.`relay` TO 'orchestrator'@'localhost';
 GRANT ALL PRIVILEGES ON `arrowhead`.`cloud_gatekeeper_relay` TO 'orchestrator'@'localhost';
 GRANT ALL PRIVILEGES ON `arrowhead`.`cloud_gateway_relay` TO 'orchestrator'@'localhost';
 GRANT ALL PRIVILEGES ON `arrowhead`.`service_definition` TO 'orchestrator'@'localhost';
 GRANT ALL PRIVILEGES ON `arrowhead`.`service_interface` TO 'orchestrator'@'localhost';
-GRANT ALL PRIVILEGES ON `arrowhead`.`orchestrator_store` TO 'orchestrator'@'localhost';
-GRANT ALL PRIVILEGES ON `arrowhead`.`system_` TO 'orchestrator'@'localhost';
-GRANT ALL PRIVILEGES ON `arrowhead`.`foreign_system` TO 'orchestrator'@'localhost';
 GRANT ALL PRIVILEGES ON `arrowhead`.`logs` TO 'orchestrator'@'localhost';
-GRANT ALL PRIVILEGES ON `arrowhead`.`foreign_system` TO 'orchestrator'@'localhost';
 
-DROP USER IF EXISTS 'orchestrator'@'%';
-CREATE USER IF NOT EXISTS 'orchestrator'@'%' IDENTIFIED BY 'KbgD2mTr8DQ4vtc';
+REVOKE ALL, GRANT OPTION FROM 'orchestrator'@'%';
+
+GRANT ALL PRIVILEGES ON `arrowhead`.`orchestrator_store` TO 'orchestrator'@'%';
+GRANT ALL PRIVILEGES ON `arrowhead`.`foreign_system` TO 'orchestrator'@'%';
+GRANT ALL PRIVILEGES ON `arrowhead`.`system_` TO 'orchestrator'@'%';
 GRANT ALL PRIVILEGES ON `arrowhead`.`cloud` TO 'orchestrator'@'%';
 GRANT ALL PRIVILEGES ON `arrowhead`.`relay` TO 'orchestrator'@'%';
 GRANT ALL PRIVILEGES ON `arrowhead`.`cloud_gatekeeper_relay` TO 'orchestrator'@'%';
 GRANT ALL PRIVILEGES ON `arrowhead`.`cloud_gateway_relay` TO 'orchestrator'@'%';
 GRANT ALL PRIVILEGES ON `arrowhead`.`service_definition` TO 'orchestrator'@'%';
 GRANT ALL PRIVILEGES ON `arrowhead`.`service_interface` TO 'orchestrator'@'%';
-GRANT ALL PRIVILEGES ON `arrowhead`.`orchestrator_store` TO 'orchestrator'@'%';
-GRANT ALL PRIVILEGES ON `arrowhead`.`system_` TO 'orchestrator'@'%';
-GRANT ALL PRIVILEGES ON `arrowhead`.`foreign_system` TO 'orchestrator'@'%';
 GRANT ALL PRIVILEGES ON `arrowhead`.`logs` TO 'orchestrator'@'%';
-GRANT ALL PRIVILEGES ON `arrowhead`.`foreign_system` TO 'orchestrator'@'%';
+
+FLUSH PRIVILEGES;
 
 -- Event Handler
-DROP USER IF EXISTS 'event_handler'@'localhost';
 CREATE USER IF NOT EXISTS 'event_handler'@'localhost' IDENTIFIED BY 'gRLjXbqu9YwYhfK';
-GRANT ALL PRIVILEGES ON `arrowhead`.`subscription` TO 'event_handler'@'localhost';
+CREATE USER IF NOT EXISTS 'event_handler'@'%' IDENTIFIED BY 'gRLjXbqu9YwYhfK';
+
+REVOKE ALL, GRANT OPTION FROM 'event_handler'@'localhost';
+
 GRANT ALL PRIVILEGES ON `arrowhead`.`event_type` TO 'event_handler'@'localhost';
+GRANT ALL PRIVILEGES ON `arrowhead`.`subscription` TO 'event_handler'@'localhost';
 GRANT ALL PRIVILEGES ON `arrowhead`.`subscription_publisher_connection` TO 'event_handler'@'localhost';
 GRANT ALL PRIVILEGES ON `arrowhead`.`system_` TO 'event_handler'@'localhost';
 GRANT ALL PRIVILEGES ON `arrowhead`.`logs` TO 'event_handler'@'localhost';
 
-DROP USER IF EXISTS 'event_handler'@'%';
-CREATE USER IF NOT EXISTS 'event_handler'@'%' IDENTIFIED BY 'gRLjXbqu9YwYhfK';
-GRANT ALL PRIVILEGES ON `arrowhead`.`subscription` TO 'event_handler'@'%';
+REVOKE ALL, GRANT OPTION FROM 'event_handler'@'%';
+
 GRANT ALL PRIVILEGES ON `arrowhead`.`event_type` TO 'event_handler'@'%';
+GRANT ALL PRIVILEGES ON `arrowhead`.`subscription` TO 'event_handler'@'%';
 GRANT ALL PRIVILEGES ON `arrowhead`.`subscription_publisher_connection` TO 'event_handler'@'%';
 GRANT ALL PRIVILEGES ON `arrowhead`.`system_` TO 'event_handler'@'%';
 GRANT ALL PRIVILEGES ON `arrowhead`.`logs` TO 'event_handler'@'%';
 
+FLUSH PRIVILEGES;
+
 -- Choreographer
-DROP USER IF EXISTS 'choreographer'@'localhost';
 CREATE USER IF NOT EXISTS 'choreographer'@'localhost' IDENTIFIED BY 'Qa5yx4oBp4Y9RLX';
+CREATE USER IF NOT EXISTS 'choreographer'@'%' IDENTIFIED BY 'Qa5yx4oBp4Y9RLX';
+
+REVOKE ALL, GRANT OPTION FROM 'choreographer'@'localhost';
+
 GRANT ALL PRIVILEGES ON `arrowhead`.`choreographer_action_plan` TO 'choreographer'@'localhost';
 GRANT ALL PRIVILEGES ON `arrowhead`.`choreographer_action` TO 'choreographer'@'localhost';
 GRANT ALL PRIVILEGES ON `arrowhead`.`choreographer_action_step` TO 'choreographer'@'localhost';
@@ -479,8 +506,8 @@ GRANT ALL PRIVILEGES ON `arrowhead`.`choreographer_next_action_step` TO 'choreog
 GRANT ALL PRIVILEGES ON `arrowhead`.`service_definition` TO 'choreographer'@'localhost';
 GRANT ALL PRIVILEGES ON `arrowhead`.`logs` TO 'choreographer'@'localhost';
 
-DROP USER IF EXISTS 'choreographer'@'%';
-CREATE USER IF NOT EXISTS 'choreographer'@'%' IDENTIFIED BY 'Qa5yx4oBp4Y9RLX';
+REVOKE ALL, GRANT OPTION FROM 'choreographer'@'%';
+
 GRANT ALL PRIVILEGES ON `arrowhead`.`choreographer_action_plan` TO 'choreographer'@'%';
 GRANT ALL PRIVILEGES ON `arrowhead`.`choreographer_action` TO 'choreographer'@'%';
 GRANT ALL PRIVILEGES ON `arrowhead`.`choreographer_action_step` TO 'choreographer'@'%';
@@ -491,50 +518,48 @@ GRANT ALL PRIVILEGES ON `arrowhead`.`choreographer_next_action_step` TO 'choreog
 GRANT ALL PRIVILEGES ON `arrowhead`.`service_definition` TO 'choreographer'@'%';
 GRANT ALL PRIVILEGES ON `arrowhead`.`logs` TO 'choreographer'@'%';
 
+FLUSH PRIVILEGES;
+
 -- Gatekeeper
-DROP USER IF EXISTS 'gatekeeper'@'localhost';
 CREATE USER IF NOT EXISTS 'gatekeeper'@'localhost' IDENTIFIED BY 'fbJKYzKhU5t8QtT';
+CREATE USER IF NOT EXISTS 'gatekeeper'@'%' IDENTIFIED BY 'fbJKYzKhU5t8QtT';
+
+REVOKE ALL, GRANT OPTION FROM 'gatekeeper'@'localhost';
+
 GRANT ALL PRIVILEGES ON `arrowhead`.`cloud` TO 'gatekeeper'@'localhost';
-GRANT ALL PRIVILEGES ON `arrowhead`.`cloud_gatekeeper_relay` TO 'gatekeeper'@'localhost';
-GRANT ALL PRIVILEGES ON `arrowhead`.`cloud_gateway_relay` TO 'gatekeeper'@'localhost';
 GRANT ALL PRIVILEGES ON `arrowhead`.`relay` TO 'gatekeeper'@'localhost';
 GRANT ALL PRIVILEGES ON `arrowhead`.`system_` TO 'gatekeeper'@'localhost';
 GRANT ALL PRIVILEGES ON `arrowhead`.`service_definition` TO 'gatekeeper'@'localhost';
+GRANT ALL PRIVILEGES ON `arrowhead`.`cloud_gatekeeper_relay` TO 'gatekeeper'@'localhost';
+GRANT ALL PRIVILEGES ON `arrowhead`.`cloud_gateway_relay` TO 'gatekeeper'@'localhost';
 GRANT ALL PRIVILEGES ON `arrowhead`.`authorization_inter_cloud` TO 'gatekeeper'@'localhost';
+GRANT ALL PRIVILEGES ON `arrowhead`.`authorization_inter_cloud_interface_connection` TO 'gatekeeper'@'localhost';
+GRANT ALL PRIVILEGES ON `arrowhead`.`foreign_system` TO 'gatekeeper'@'localhost';
 GRANT ALL PRIVILEGES ON `arrowhead`.`logs` TO 'gatekeeper'@'localhost';
 
-DROP USER IF EXISTS 'gatekeeper'@'%';
-CREATE USER IF NOT EXISTS 'gatekeeper'@'%' IDENTIFIED BY 'fbJKYzKhU5t8QtT';
+REVOKE ALL, GRANT OPTION FROM 'gatekeeper'@'%';
+
 GRANT ALL PRIVILEGES ON `arrowhead`.`cloud` TO 'gatekeeper'@'%';
-GRANT ALL PRIVILEGES ON `arrowhead`.`cloud_gatekeeper_relay` TO 'gatekeeper'@'%';
-GRANT ALL PRIVILEGES ON `arrowhead`.`cloud_gateway_relay` TO 'gatekeeper'@'%';
 GRANT ALL PRIVILEGES ON `arrowhead`.`relay` TO 'gatekeeper'@'%';
 GRANT ALL PRIVILEGES ON `arrowhead`.`system_` TO 'gatekeeper'@'%';
 GRANT ALL PRIVILEGES ON `arrowhead`.`service_definition` TO 'gatekeeper'@'%';
+GRANT ALL PRIVILEGES ON `arrowhead`.`cloud_gatekeeper_relay` TO 'gatekeeper'@'%';
+GRANT ALL PRIVILEGES ON `arrowhead`.`cloud_gateway_relay` TO 'gatekeeper'@'%';
 GRANT ALL PRIVILEGES ON `arrowhead`.`authorization_inter_cloud` TO 'gatekeeper'@'%';
+GRANT ALL PRIVILEGES ON `arrowhead`.`authorization_inter_cloud_interface_connection` TO 'gatekeeper'@'%';
+GRANT ALL PRIVILEGES ON `arrowhead`.`foreign_system` TO 'gatekeeper'@'%';
 GRANT ALL PRIVILEGES ON `arrowhead`.`logs` TO 'gatekeeper'@'%';
 
+FLUSH PRIVILEGES;
+
 -- Gateway
-DROP USER IF EXISTS 'gateway'@'localhost';
 CREATE USER IF NOT EXISTS 'gateway'@'localhost' IDENTIFIED BY 'LfiSM9DpGfDEP5g';
-GRANT ALL PRIVILEGES ON `arrowhead`.`cloud` TO 'gateway'@'localhost';
-GRANT ALL PRIVILEGES ON `arrowhead`.`cloud_gatekeeper_relay` TO 'gateway'@'localhost';
-GRANT ALL PRIVILEGES ON `arrowhead`.`cloud_gateway_relay` TO 'gateway'@'localhost';
-GRANT ALL PRIVILEGES ON `arrowhead`.`relay` TO 'gateway'@'localhost';
-GRANT ALL PRIVILEGES ON `arrowhead`.`system_` TO 'gateway'@'localhost';
-GRANT ALL PRIVILEGES ON `arrowhead`.`service_definition` TO 'gateway'@'localhost';
-GRANT ALL PRIVILEGES ON `arrowhead`.`authorization_inter_cloud` TO 'gateway'@'localhost';
+CREATE USER IF NOT EXISTS 'gateway'@'%' IDENTIFIED BY 'LfiSM9DpGfDEP5g';
+
+REVOKE ALL, GRANT OPTION FROM 'gateway'@'localhost';
 GRANT ALL PRIVILEGES ON `arrowhead`.`logs` TO 'gateway'@'localhost';
 
-DROP USER IF EXISTS 'gateway'@'%';
-CREATE USER IF NOT EXISTS 'gateway'@'%' IDENTIFIED BY 'LfiSM9DpGfDEP5g';
-GRANT ALL PRIVILEGES ON `arrowhead`.`cloud` TO 'gateway'@'%';
-GRANT ALL PRIVILEGES ON `arrowhead`.`cloud_gatekeeper_relay` TO 'gateway'@'%';
-GRANT ALL PRIVILEGES ON `arrowhead`.`cloud_gateway_relay` TO 'gateway'@'%';
-GRANT ALL PRIVILEGES ON `arrowhead`.`relay` TO 'gateway'@'%';
-GRANT ALL PRIVILEGES ON `arrowhead`.`system_` TO 'gateway'@'%';
-GRANT ALL PRIVILEGES ON `arrowhead`.`service_definition` TO 'gateway'@'%';
-GRANT ALL PRIVILEGES ON `arrowhead`.`authorization_inter_cloud` TO 'gateway'@'%';
+REVOKE ALL, GRANT OPTION FROM 'gateway'@'%';
 GRANT ALL PRIVILEGES ON `arrowhead`.`logs` TO 'gateway'@'%';
 
 FLUSH PRIVILEGES;

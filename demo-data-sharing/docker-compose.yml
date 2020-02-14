@@ -6,44 +6,44 @@ services:
   ###            RELAY "CLOUD"             ###
   ############################################
 
-  activemq:
-    container_name: alpha.relay
-    image: rmohr/activemq:latest
-    volumes:
-      - ./cloud-relay/alpha.xml:/opt/activemq/conf/activemq.xml
-      - ./cloud-relay/alpha-jetty.xml:/opt/activemq/conf/alpha-jetty.xml
-      - ./cloud-relay/crypto/alpha.p12:/opt/activemq/conf/keystore.p12
-      - ./cloud-relay/crypto/truststore.p12:/opt/activemq/conf/truststore.p12
-    ports:
-      - 61617:61617
-      - 8161:8161 # Web console.
-    networks:
-      clouds:
-        ipv4_address: 172.23.1.11
+# activemq:
+#   container_name: alpha.relay
+#   image: rmohr/activemq:latest
+#   volumes:
+#     - ./cloud-relay/alpha.xml:/opt/activemq/conf/activemq.xml
+#     - ./cloud-relay/alpha-jetty.xml:/opt/activemq/conf/alpha-jetty.xml
+#     - ./cloud-relay/crypto/alpha.p12:/opt/activemq/conf/keystore.p12
+#     - ./cloud-relay/crypto/truststore.p12:/opt/activemq/conf/truststore.p12
+#   ports:
+#     - 61617:61617
+#     - 8161:8161 # Web console.
+#   networks:
+#     clouds:
+#       ipv4_address: 172.23.1.11
 
   ############################################
   ###         DATA CONSUMER CLOUD          ###
   ############################################
 
-  consumer-mgmt-tool:
-    container_name: mgmt-tool.consumer
+  management_tool.consumer:
+    container_name: management_tool.consumer
     image: management-tool
     environment:
       - ARROWHEAD_AUTH_URL=https://172.23.2.13:8441
-      #- ARROWHEAD_EH_URL=https://172.23.2.13:8442
+      - ARROWHEAD_EH_URL=https://172.23.2.13:8442
       - ARROWHEAD_GK_URL=https://172.23.2.13:8443
       - ARROWHEAD_GW_URL=https://172.23.2.13:8444
       - ARROWHEAD_ORCH_URL=https://172.23.2.13:8445
       - ARROWHEAD_SR_URL=https://172.23.2.13:8446
     depends_on:
-      - consumer-core
+      - core.consumer
     ports:
       - 80:80
     networks:
       clouds:
         ipv4_address: 172.23.2.11
 
-  consumer-mysql:
+  mysql.consumer:
     container_name: mysql.consumer
     image: mysql:5.7
     environment:
@@ -55,19 +55,19 @@ services:
       clouds:
         ipv4_address: 172.23.2.12
 
-  consumer-core:
+  core.consumer:
     container_name: core.consumer
     image: arrowhead-core-all
     depends_on:
-      - consumer-mysql
+      - mysql.consumer
     volumes:
       - ./cloud-data-consumer/crypto/authorization.p12:/opt/arrowhead-core/authorization/certificates/authorization.p12
       - ./cloud-data-consumer/crypto/truststore.p12:/opt/arrowhead-core/authorization/certificates/truststore.p12
       - ./cloud-data-consumer/authorization.properties:/opt/arrowhead-core/authorization/application.properties
 
-      #- ./cloud-data-consumer/crypto/eventhandler.p12:/opt/arrowhead-core/eventhandler/certificates/eventhandler.p12
-      #- ./cloud-data-consumer/crypto/truststore.p12:/opt/arrowhead-core/eventhandler/certificates/truststore.p12
-      #- ./cloud-data-consumer/eventhandler.properties:/opt/arrowhead-core/eventhandler/application.properties
+      - ./cloud-data-consumer/crypto/event_handler.p12:/opt/arrowhead-core/eventhandler/certificates/event_handler.p12
+      - ./cloud-data-consumer/crypto/truststore.p12:/opt/arrowhead-core/eventhandler/certificates/truststore.p12
+      - ./cloud-data-consumer/event_handler.properties:/opt/arrowhead-core/eventhandler/application.properties
 
       - ./cloud-data-consumer/crypto/gatekeeper.p12:/opt/arrowhead-core/gatekeeper/certificates/gatekeeper.p12
       - ./cloud-data-consumer/crypto/truststore.p12:/opt/arrowhead-core/gatekeeper/certificates/truststore.p12
@@ -81,12 +81,12 @@ services:
       - ./cloud-data-consumer/crypto/truststore.p12:/opt/arrowhead-core/orchestrator/certificates/truststore.p12
       - ./cloud-data-consumer/orchestrator.properties:/opt/arrowhead-core/orchestrator/application.properties
 
-      - ./cloud-data-consumer/crypto/serviceregistry.p12:/opt/arrowhead-core/serviceregistry/certificates/serviceregistry.p12
+      - ./cloud-data-consumer/crypto/service_registry.p12:/opt/arrowhead-core/serviceregistry/certificates/service_registry.p12
       - ./cloud-data-consumer/crypto/truststore.p12:/opt/arrowhead-core/serviceregistry/certificates/truststore.p12
-      - ./cloud-data-consumer/serviceregistry.properties:/opt/arrowhead-core/serviceregistry/application.properties
+      - ./cloud-data-consumer/service_registry.properties:/opt/arrowhead-core/serviceregistry/application.properties
     ports:
       - 8441:8441
-      #- 8442:8442
+      - 8442:8442
       - 8443:8443
       - 8444:8444
       - 8445:8445
@@ -95,35 +95,26 @@ services:
       clouds:
         ipv4_address: 172.23.2.13
 
-#  consumer-contractproxy:
-#    container_name: contractproxy.consumer
+#  contract_proxy.consumer:
+#    container_name: contract_proxy.consumer
 #    image: TODO
-#    depends_on:
-#      - consumer-mysql
-#      - consumer-orchestrator
-#      - consumer-serviceregistry
 #    volumes:
-#      - ./cloud-data-consumer/crypto/contractproxy.p12:/contractproxy/certificates/contractproxy.p12
-#      - ./cloud-data-consumer/crypto/truststore.p12:/contractproxy/certificates/truststore.p12
-#      - ./cloud-data-consumer/contractproxy.properties:/contractproxy/application.properties
+#      - ./cloud-data-consumer/crypto/contract_proxy.p12:/contract_proxy/certificates/contract_proxy.p12
+#      - ./cloud-data-consumer/crypto/truststore.p12:/contract_proxy/certificates/truststore.p12
+#      - ./cloud-data-consumer/contract_proxy.properties:/contract_proxy/application.properties
 #    ports:
 #      - 8450:8450
 #    networks:
 #      clouds:
 #        ipv4_address: 172.23.2.14
 
-#  consumer-dataproducer:
-#    container_name: dataproducer.consumer
+#  data_consumer.consumer:
+#    container_name: data_consumer.consumer
 #    image: TODO
-#    depends_on:
-#      - consumer-mysql
-#      - consumer-orchestrator
-#      - consumer-serviceregistry
-#      - consumer-contract_system
 #    volumes:
-#      - ./cloud-data-consumer/crypto/dataproducer.p12:/dataproducer/certificates/dataproducer.p12
-#      - ./cloud-data-consumer/crypto/truststore.p12:/dataproducer/certificates/truststore.p12
-#      - ./cloud-data-consumer/dataproducer.properties:/dataproducer/application.properties
+#      - ./cloud-data-consumer/crypto/data_consumer.p12:/data_consumer/certificates/data_consumer.p12
+#      - ./cloud-data-consumer/crypto/truststore.p12:/data_consumer/certificates/truststore.p12
+#      - ./cloud-data-consumer/data_consumer.properties:/data_consumer/application.properties
 #    ports:
 #      - 8451:8451
 #    networks:
@@ -134,105 +125,96 @@ services:
   ###         DATA PRODUCER CLOUD          ###
   ############################################
 
-  producer-mgmt-tool:
-    container_name: mgmt-tool.producer
-    image: management-tool
-    environment:
-      - ARROWHEAD_AUTH_URL=https://172.23.3.13:8541
-      #- ARROWHEAD_EH_URL=https://172.23.3.13:8542
-      - ARROWHEAD_GK_URL=https://172.23.3.13:8543
-      - ARROWHEAD_GW_URL=https://172.23.3.13:8544
-      - ARROWHEAD_ORCH_URL=https://172.23.3.13:8545
-      - ARROWHEAD_SR_URL=https://172.23.3.13:8546
-    depends_on:
-      - producer-core
-    ports:
-      - 5000:5000
-    networks:
-      clouds:
-        ipv4_address: 172.23.3.11
+# management_tool.producer:
+#   container_name: management_tool.producer
+#   image: management-tool
+#   environment:
+#     - ARROWHEAD_AUTH_URL=https://172.23.3.13:8541
+#     #- ARROWHEAD_EH_URL=https://172.23.3.13:8542
+#     - ARROWHEAD_GK_URL=https://172.23.3.13:8543
+#     - ARROWHEAD_GW_URL=https://172.23.3.13:8544
+#     - ARROWHEAD_ORCH_URL=https://172.23.3.13:8545
+#     - ARROWHEAD_SR_URL=https://172.23.3.13:8546
+#   depends_on:
+#     - core.producer
+#   ports:
+#     - 5000:5000
+#   networks:
+#     clouds:
+#       ipv4_address: 172.23.3.11
 
-  producer-mysql:
-    container_name: mysql.producer
-    image: mysql:5.7
-    environment:
-      - MYSQL_ROOT_PASSWORD=123456
-    volumes:
-      - producer_mysql_vol:/var/lib/mysql
-      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
-    networks:
-      clouds:
-        ipv4_address: 172.23.3.12
+# mysql.producer:
+#   container_name: mysql.producer
+#   image: mysql:5.7
+#   environment:
+#     - MYSQL_ROOT_PASSWORD=123456
+#   volumes:
+#     - producer_mysql_vol:/var/lib/mysql
+#     - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+#   networks:
+#     clouds:
+#       ipv4_address: 172.23.3.12
 
-  producer-core:
-    container_name: core.producer
-    image: arrowhead-core-all
-    depends_on:
-      - producer-mysql
-    volumes:
-      - ./cloud-data-producer/crypto/authorization.p12:/opt/arrowhead-core/authorization/certificates/authorization.p12
-      - ./cloud-data-producer/crypto/truststore.p12:/opt/arrowhead-core/authorization/certificates/truststore.p12
-      - ./cloud-data-producer/authorization.properties:/opt/arrowhead-core/authorization/application.properties
+# core.producer:
+#   container_name: core.producer
+#   image: arrowhead-core-all
+#   depends_on:
+#     - mysql.producer
+#   volumes:
+#     - ./cloud-data-producer/crypto/authorization.p12:/opt/arrowhead-core/authorization/certificates/authorization.p12
+#     - ./cloud-data-producer/crypto/truststore.p12:/opt/arrowhead-core/authorization/certificates/truststore.p12
+#     - ./cloud-data-producer/authorization.properties:/opt/arrowhead-core/authorization/application.properties
 
-      #- ./cloud-data-producer/crypto/eventhandler.p12:/opt/arrowhead-core/eventhandler/certificates/eventhandler.p12
-      #- ./cloud-data-producer/crypto/truststore.p12:/opt/arrowhead-core/eventhandler/certificates/truststore.p12
-      #- ./cloud-data-producer/eventhandler.properties:/opt/arrowhead-core/eventhandler/application.properties
+#     #- ./cloud-data-producer/crypto/event_handler.p12:/opt/arrowhead-core/eventhandler/certificates/event_handler.p12
+#     #- ./cloud-data-producer/crypto/truststore.p12:/opt/arrowhead-core/eventhandler/certificates/truststore.p12
+#     #- ./cloud-data-producer/event_handler.properties:/opt/arrowhead-core/eventhandler/application.properties
 
-      - ./cloud-data-producer/crypto/gatekeeper.p12:/opt/arrowhead-core/gatekeeper/certificates/gatekeeper.p12
-      - ./cloud-data-producer/crypto/truststore.p12:/opt/arrowhead-core/gatekeeper/certificates/truststore.p12
-      - ./cloud-data-producer/gatekeeper.properties:/opt/arrowhead-core/gatekeeper/application.properties
+#     - ./cloud-data-producer/crypto/gatekeeper.p12:/opt/arrowhead-core/gatekeeper/certificates/gatekeeper.p12
+#     - ./cloud-data-producer/crypto/truststore.p12:/opt/arrowhead-core/gatekeeper/certificates/truststore.p12
+#     - ./cloud-data-producer/gatekeeper.properties:/opt/arrowhead-core/gatekeeper/application.properties
 
-      - ./cloud-data-producer/crypto/gateway.p12:/opt/arrowhead-core/gateway/certificates/gateway.p12
-      - ./cloud-data-producer/crypto/truststore.p12:/opt/arrowhead-core/gateway/certificates/truststore.p12
-      - ./cloud-data-producer/gateway.properties:/opt/arrowhead-core/gateway/application.properties
+#     - ./cloud-data-producer/crypto/gateway.p12:/opt/arrowhead-core/gateway/certificates/gateway.p12
+#     - ./cloud-data-producer/crypto/truststore.p12:/opt/arrowhead-core/gateway/certificates/truststore.p12
+#     - ./cloud-data-producer/gateway.properties:/opt/arrowhead-core/gateway/application.properties
 
-      - ./cloud-data-producer/crypto/orchestrator.p12:/opt/arrowhead-core/orchestrator/certificates/orchestrator.p12
-      - ./cloud-data-producer/crypto/truststore.p12:/opt/arrowhead-core/orchestrator/certificates/truststore.p12
-      - ./cloud-data-producer/orchestrator.properties:/opt/arrowhead-core/orchestrator/application.properties
+#     - ./cloud-data-producer/crypto/orchestrator.p12:/opt/arrowhead-core/orchestrator/certificates/orchestrator.p12
+#     - ./cloud-data-producer/crypto/truststore.p12:/opt/arrowhead-core/orchestrator/certificates/truststore.p12
+#     - ./cloud-data-producer/orchestrator.properties:/opt/arrowhead-core/orchestrator/application.properties
 
-      - ./cloud-data-producer/crypto/serviceregistry.p12:/opt/arrowhead-core/serviceregistry/certificates/serviceregistry.p12
-      - ./cloud-data-producer/crypto/truststore.p12:/opt/arrowhead-core/serviceregistry/certificates/truststore.p12
-      - ./cloud-data-producer/serviceregistry.properties:/opt/arrowhead-core/serviceregistry/application.properties
-    ports:
-      - 8541:8541
-      #- 8542:8542
-      - 8543:8543
-      - 8544:8544
-      - 8545:8545
-      - 8546:8546
-    networks:
-      clouds:
-        ipv4_address: 172.23.3.13
+#     - ./cloud-data-producer/crypto/service_registry.p12:/opt/arrowhead-core/serviceregistry/certificates/service_registry.p12
+#     - ./cloud-data-producer/crypto/truststore.p12:/opt/arrowhead-core/serviceregistry/certificates/truststore.p12
+#     - ./cloud-data-producer/service_registry.properties:/opt/arrowhead-core/serviceregistry/application.properties
+#   ports:
+#     - 8541:8541
+#     #- 8542:8542
+#     - 8543:8543
+#     - 8544:8544
+#     - 8545:8545
+#     - 8546:8546
+#   networks:
+#     clouds:
+#       ipv4_address: 172.23.3.13
 
-#  producer-contractproxy:
-#    container_name: contractproxy.producer
+#  contract_proxy.producer:
+#    container_name: contract_proxy.producer
 #    image: TODO
-#    depends_on:
-#      - producer-mysql
-#      - producer-orchestrator
-#      - producer-serviceregistry
 #    volumes:
-#      - ./cloud-data-producer/crypto/contractproxy.p12:/contractproxy/certificates/contractproxy.p12
-#      - ./cloud-data-producer/crypto/truststore.p12:/contractproxy/certificates/truststore.p12
-#      - ./cloud-data-producer/contractproxy.properties:/contractproxy/application.properties
+#      - ./cloud-data-producer/crypto/contract_proxy.p12:/contract_proxy/certificates/contract_proxy.p12
+#      - ./cloud-data-producer/crypto/truststore.p12:/contract_proxy/certificates/truststore.p12
+#      - ./cloud-data-producer/contract_proxy.properties:/contract_proxy/application.properties
 #    ports:
 #      - 8550:8550
 #    networks:
 #      clouds:
 #        ipv4_address: 172.23.3.14
 
-#  producer-dataproducer:
-#    container_name: dataproducer.producer
+#  data_producer.producer:
+#    container_name: data_producer.producer
 #    image: TODO
-#    depends_on:
-#      - producer-mysql
-#      - producer-orchestrator
-#      - producer-serviceregistry
-#      - producer-contract_system
 #    volumes:
-#      - ./cloud-data-producer/crypto/dataproducer.p12:/dataproducer/certificates/dataproducer.p12
-#      - ./cloud-data-producer/crypto/truststore.p12:/dataproducer/certificates/truststore.p12
-#      - ./cloud-data-producer/dataproducer.properties:/dataproducer/application.properties
+#      - ./cloud-data-producer/crypto/data_producer.p12:/data_producer/certificates/data_producer.p12
+#      - ./cloud-data-producer/crypto/truststore.p12:/data_producer/certificates/truststore.p12
+#      - ./cloud-data-producer/data_producer.properties:/data_producer/application.properties
 #    ports:
 #      - 8551:8551
 #    networks:
@@ -242,8 +224,8 @@ services:
 volumes:
   consumer_mysql_vol:
     external: true
-  producer_mysql_vol:
-    external: true
+# producer_mysql_vol:
+#   external: true
 
 networks:
   clouds:
