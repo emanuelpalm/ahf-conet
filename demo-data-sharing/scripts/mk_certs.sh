@@ -33,22 +33,23 @@ create_cloud_keystore \
 
 create_consumer_system_keystore() {
   SYSTEM_NAME=$1
+  SYSTEM_SAN=$2
 
   create_system_keystore \
     "cloud-root/crypto/root.p12" "arrowhead.eu" \
     "cloud-data-consumer/crypto/conet-demo-consumer.p12" "conet-demo-consumer.ltu.arrowhead.eu" \
     "cloud-data-consumer/crypto/${SYSTEM_NAME}.p12" "${SYSTEM_NAME}.conet-demo-consumer.ltu.arrowhead.eu" \
-    "dns:core.consumer,ip:172.23.2.13,dns:localhost,ip:127.0.0.1"
+    "${SYSTEM_SAN}"
 }
 
-create_consumer_system_keystore "authorization"
-create_consumer_system_keystore "contract-proxy"
-create_consumer_system_keystore "data-consumer"
-create_consumer_system_keystore "event_handler"
-create_consumer_system_keystore "gatekeeper"
-create_consumer_system_keystore "gateway"
-create_consumer_system_keystore "orchestrator"
-create_consumer_system_keystore "service_registry"
+create_consumer_system_keystore "authorization"    "ip:172.23.2.13,dns:localhost,ip:127.0.0.1"
+create_consumer_system_keystore "contract-proxy"   "ip:172.23.2.14,dns:localhost,ip:127.0.0.1"
+create_consumer_system_keystore "data-consumer"    "ip:172.23.2.15,dns:localhost,ip:127.0.0.1"
+create_consumer_system_keystore "event_handler"    "ip:172.23.2.16,dns:localhost,ip:127.0.0.1"
+create_consumer_system_keystore "gatekeeper"       "ip:172.23.2.17,dns:localhost,ip:127.0.0.1"
+create_consumer_system_keystore "gateway"          "ip:172.23.2.18,dns:localhost,ip:127.0.0.1"
+create_consumer_system_keystore "orchestrator"     "ip:172.23.2.19,dns:localhost,ip:127.0.0.1"
+create_consumer_system_keystore "service_registry" "ip:172.23.2.20,dns:localhost,ip:127.0.0.1"
 
 create_sysop_keystore \
   "cloud-root/crypto/root.p12" "arrowhead.eu" \

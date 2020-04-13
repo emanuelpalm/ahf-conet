@@ -30,13 +30,11 @@ services:
     image: management-tool
     environment:
       - ARROWHEAD_AUTH_URL=https://172.23.2.13:8441
-      - ARROWHEAD_EH_URL=https://172.23.2.13:8442
-      - ARROWHEAD_GK_URL=https://172.23.2.13:8443
-      - ARROWHEAD_GW_URL=https://172.23.2.13:8444
-      - ARROWHEAD_ORCH_URL=https://172.23.2.13:8445
-      - ARROWHEAD_SR_URL=https://172.23.2.13:8446
-    depends_on:
-      - core.consumer
+      - ARROWHEAD_EH_URL=https://172.23.2.16:8444
+      - ARROWHEAD_GK_URL=https://172.23.2.17:8445
+      - ARROWHEAD_GW_URL=https://172.23.2.18:8446
+      - ARROWHEAD_ORCH_URL=https://172.23.2.19:8447
+      - ARROWHEAD_SR_URL=https://172.23.2.20:8448
     ports:
       - 80:80
     networks:
@@ -55,71 +53,136 @@ services:
       clouds:
         ipv4_address: 172.23.2.12
 
-  core.consumer:
-    container_name: core.consumer
-    image: arrowhead-core-all
+  authorization.consumer:
+    container_name: authorization.consumer
+    image: svetlint/authorization:latest
     depends_on:
       - mysql.consumer
+      - service_registry.consumer
     volumes:
-      - ./cloud-data-consumer/crypto/authorization.p12:/opt/arrowhead-core/authorization/certificates/authorization.p12
-      - ./cloud-data-consumer/crypto/truststore.p12:/opt/arrowhead-core/authorization/certificates/truststore.p12
-      - ./cloud-data-consumer/authorization.properties:/opt/arrowhead-core/authorization/application.properties
-
-      - ./cloud-data-consumer/crypto/event_handler.p12:/opt/arrowhead-core/eventhandler/certificates/event_handler.p12
-      - ./cloud-data-consumer/crypto/truststore.p12:/opt/arrowhead-core/eventhandler/certificates/truststore.p12
-      - ./cloud-data-consumer/event_handler.properties:/opt/arrowhead-core/eventhandler/application.properties
-
-      - ./cloud-data-consumer/crypto/gatekeeper.p12:/opt/arrowhead-core/gatekeeper/certificates/gatekeeper.p12
-      - ./cloud-data-consumer/crypto/truststore.p12:/opt/arrowhead-core/gatekeeper/certificates/truststore.p12
-      - ./cloud-data-consumer/gatekeeper.properties:/opt/arrowhead-core/gatekeeper/application.properties
-
-      - ./cloud-data-consumer/crypto/gateway.p12:/opt/arrowhead-core/gateway/certificates/gateway.p12
-      - ./cloud-data-consumer/crypto/truststore.p12:/opt/arrowhead-core/gateway/certificates/truststore.p12
-      - ./cloud-data-consumer/gateway.properties:/opt/arrowhead-core/gateway/application.properties
-
-      - ./cloud-data-consumer/crypto/orchestrator.p12:/opt/arrowhead-core/orchestrator/certificates/orchestrator.p12
-      - ./cloud-data-consumer/crypto/truststore.p12:/opt/arrowhead-core/orchestrator/certificates/truststore.p12
-      - ./cloud-data-consumer/orchestrator.properties:/opt/arrowhead-core/orchestrator/application.properties
-
-      - ./cloud-data-consumer/crypto/service_registry.p12:/opt/arrowhead-core/serviceregistry/certificates/service_registry.p12
-      - ./cloud-data-consumer/crypto/truststore.p12:/opt/arrowhead-core/serviceregistry/certificates/truststore.p12
-      - ./cloud-data-consumer/service_registry.properties:/opt/arrowhead-core/serviceregistry/application.properties
+      - ./cloud-data-consumer/crypto/authorization.p12:/authorization/certificates/authorization.p12
+      - ./cloud-data-consumer/crypto/truststore.p12:/authorization/certificates/truststore.p12
+      - ./cloud-data-consumer/authorization.properties:/authorization/application.properties
     ports:
       - 8441:8441
-      - 8442:8442
-      - 8443:8443
-      - 8444:8444
-      - 8445:8445
-      - 8446:8446
     networks:
       clouds:
         ipv4_address: 172.23.2.13
 
-#  contract_proxy.consumer:
-#    container_name: contract_proxy.consumer
+#  contract-proxy.consumer:
+#    container_name: contract-proxy.consumer
 #    image: TODO
+#    depends_on:
+#      - mysql.consumer
+#      - orchestrator.consumer
+#      - service_registry.consumer
 #    volumes:
-#      - ./cloud-data-consumer/crypto/contract_proxy.p12:/contract_proxy/certificates/contract_proxy.p12
-#      - ./cloud-data-consumer/crypto/truststore.p12:/contract_proxy/certificates/truststore.p12
-#      - ./cloud-data-consumer/contract_proxy.properties:/contract_proxy/application.properties
+#      - ./cloud-data-consumer/crypto/contract-proxy.p12:/contractproxy/certificates/contract-proxy.p12
+#      - ./cloud-data-consumer/crypto/truststore.p12:/contractproxy/certificates/truststore.p12
+#      - ./cloud-data-consumer/contract_proxy.properties:/contractproxy/application.properties
 #    ports:
-#      - 8450:8450
+#      - 8442:8442
 #    networks:
 #      clouds:
 #        ipv4_address: 172.23.2.14
 
-#  data_consumer.consumer:
-#    container_name: data_consumer.consumer
+#  data-consumer.consumer:
+#    container_name: data-consumer.consumer
 #    image: TODO
+#    depends_on:
+#      - mysql.consumer
+#      - orchestrator.consumer
+#      - service_registry.consumer
+#      - contract-proxy.consumer
 #    volumes:
-#      - ./cloud-data-consumer/crypto/data_consumer.p12:/data_consumer/certificates/data_consumer.p12
-#      - ./cloud-data-consumer/crypto/truststore.p12:/data_consumer/certificates/truststore.p12
-#      - ./cloud-data-consumer/data_consumer.properties:/data_consumer/application.properties
+#      - ./cloud-data-consumer/crypto/data-consumer.p12:/dataconsumer/certificates/data-consumer.p12
+#      - ./cloud-data-consumer/crypto/truststore.p12:/dataconsumer/certificates/truststore.p12
+#      - ./cloud-data-consumer/data_consumer.properties:/dataconsumer/application.properties
 #    ports:
-#      - 8451:8451
+#      - 8443:8443
 #    networks:
 #      clouds:
 #        ipv4_address: 172.23.2.15
+
+  event_handler.consumer:
+    container_name: event_handler.consumer
+    image: svetlint/eventhandler:latest
+    depends_on:
+      - mysql.consumer
+      - service_registry.consumer
+    volumes:
+      - ./cloud-data-consumer/crypto/event_handler.p12:/eventhandler/certificates/event_handler.p12
+      - ./cloud-data-consumer/crypto/truststore.p12:/eventhandler/certificates/truststore.p12
+      - ./cloud-data-consumer/event_handler.properties:/eventhandler/application.properties
+    ports:
+      - 8444:8444
+    networks:
+      clouds:
+        ipv4_address: 172.23.2.16
+
+  gatekeeper.consumer:
+    container_name: gatekeeper.consumer
+    image: svetlint/gatekeeper:latest
+    depends_on:
+      - mysql.consumer
+      - service_registry.consumer
+    volumes:
+      - ./cloud-data-consumer/crypto/gatekeeper.p12:/gatekeeper/certificates/gatekeeper.p12
+      - ./cloud-data-consumer/crypto/truststore.p12:/gatekeeper/certificates/truststore.p12
+      - ./cloud-data-consumer/gatekeeper.properties:/gatekeeper/application.properties
+    ports:
+      - 8445:8445
+    networks:
+      clouds:
+        ipv4_address: 172.23.2.17
+
+  gateway.consumer:
+    container_name: gateway.consumer
+    image: svetlint/gateway:latest
+    depends_on:
+      - mysql.consumer
+      - service_registry.consumer
+    volumes:
+      - ./cloud-data-consumer/crypto/gateway.p12:/gateway/certificates/gateway.p12
+      - ./cloud-data-consumer/crypto/truststore.p12:/gateway/certificates/truststore.p12
+      - ./cloud-data-consumer/gateway.properties:/gateway/application.properties
+    ports:
+      - 8446:8446
+    networks:
+      clouds:
+        ipv4_address: 172.23.2.18
+
+  orchestrator.consumer:
+    container_name: orchestrator.consumer
+    image: svetlint/orchestrator:latest
+    depends_on:
+      - mysql.consumer
+      - service_registry.consumer
+      - gatekeeper.consumer
+    volumes:
+      - ./cloud-data-consumer/crypto/orchestrator.p12:/orchestrator/certificates/orchestrator.p12
+      - ./cloud-data-consumer/crypto/truststore.p12:/orchestrator/certificates/truststore.p12
+      - ./cloud-data-consumer/orchestrator.properties:/orchestrator/application.properties
+    ports:
+      - 8447:8447
+    networks:
+      clouds:
+        ipv4_address: 172.23.2.19
+
+  service_registry.consumer:
+    container_name: service_registry.consumer
+    image: svetlint/serviceregistry:latest
+    depends_on:
+      - mysql.consumer
+    volumes:
+      - ./cloud-data-consumer/crypto/service_registry.p12:/serviceregistry/certificates/service_registry.p12
+      - ./cloud-data-consumer/crypto/truststore.p12:/serviceregistry/certificates/truststore.p12
+      - ./cloud-data-consumer/service_registry.properties:/serviceregistry/application.properties
+    ports:
+      - 8448:8448
+    networks:
+      clouds:
+        ipv4_address: 172.23.2.20
 
   ############################################
   ###         DATA PRODUCER CLOUD          ###
